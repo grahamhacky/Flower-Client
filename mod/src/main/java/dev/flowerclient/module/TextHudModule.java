@@ -26,7 +26,7 @@ public abstract class TextHudModule extends HudModule {
         String l = label();
         int cx = PAD;
         if (!l.isEmpty()) {
-            ctx.drawText(mc.textRenderer, l, cx, PAD, Theme.ACCENT, true);
+            ctx.drawText(mc.textRenderer, l, cx, PAD, Theme.hudAccent, true);
             cx += mc.textRenderer.getWidth(l + " ");
         }
         ctx.drawText(mc.textRenderer, value(mc), cx, PAD, Theme.TEXT, true);

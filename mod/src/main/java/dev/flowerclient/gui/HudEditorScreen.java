@@ -26,7 +26,7 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        if (client != null && client.world != null) ctx.fill(0, 0, width, height, 0x50000000);
+        if (client != null && client.world != null) ctx.fill(0, 0, width, height, 0x30000000);
         else super.renderBackground(ctx, mouseX, mouseY, delta);
     }
 
@@ -68,7 +68,8 @@ public class HudEditorScreen extends Screen {
         String hint = "Drag to move  ·  Scroll to resize  ·  Right-click: background  ·  Esc to save";
         int hw = textRenderer.getWidth(hint) + 16;
         int hx = (width - hw) / 2, hy = height - 26;
-        Theme.panel(ctx, hx, hy, hw, 16, Theme.PANEL);
+        Theme.panel(ctx, hx, hy, hw, 16, 0xB0141015);
+        Theme.outline(ctx, hx, hy, hw, 16, Theme.GLASS_EDGE);
         ctx.drawText(textRenderer, hint, hx + 8, hy + 4, Theme.MUTED, false);
     }
 

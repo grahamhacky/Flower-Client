@@ -29,6 +29,7 @@ public final class ModuleManager {
         add(new SpeedModule());
         add(ZOOM = new ZoomModule());
         add(new ToggleSprintModule());
+        add(new BiomeTintModule());
     }
 
     private static void add(Module m) {

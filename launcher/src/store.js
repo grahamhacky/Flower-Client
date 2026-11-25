@@ -19,6 +19,7 @@ const DEFAULTS = {
   fullscreen: false,
   closeOnLaunch: false,
   performanceMods: { sodium: true, lithium: true, 'ferrite-core': true, entityculling: false },
+  bloomTheme: 'auto',
   jvmArgs: '-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200',
 };
 

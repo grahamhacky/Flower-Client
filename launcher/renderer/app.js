@@ -9,7 +9,7 @@ const state = { settings: null, account: null, modules: [], perf: {}, info: null
 const bloom = new window.FlowerBloom($('#bloom'));
 
 /* ---------------- placement of the flower per page ---------------- */
-const ANCHORS = { home: [0.7, 0.42, 0.22], mods: [0.9, 0.6, 0.2], settings: [0.9, 0.6, 0.2], log: [0.92, 0.18, 0.1] };
+const ANCHORS = { home: [0.7, 0.42, 0.22], mods: [0.66, 0.4, 0.26], settings: [0.66, 0.4, 0.26], log: [0.7, 0.4, 0.24] };
 function placeFlower(page, dur) {
   const [x, y, s] = ANCHORS[page] || ANCHORS.home;
   bloom.moveTo(x, y, s, dur);
@@ -204,6 +204,22 @@ function renderSettings() {
   $('#javaPath').value = s.javaPath || '';
   $('#jvmArgs').value = s.jvmArgs || '';
   $('#closeOnLaunch').checked = !!s.closeOnLaunch;
+  renderThemes();
+}
+
+function renderThemes() {
+  const box = $('#bloom-themes');
+  const current = state.settings.bloomTheme || 'auto';
+  const autoKey = window.FlowerBloom.seasonFor();
+  const opts = [['auto', `Auto · ${window.FlowerBloom.THEMES[autoKey]}`], ...Object.entries(window.FlowerBloom.THEMES)];
+  box.innerHTML = opts.map(([k, label]) => `<button type="button" role="radio" aria-checked="${k === current}" data-theme="${k}">${esc(label)}</button>`).join('');
+  box.querySelectorAll('button').forEach((b) => b.addEventListener('click', async () => {
+    await save({ bloomTheme: b.dataset.theme });
+    renderThemes();
+    bloom.setTheme(b.dataset.theme);
+    bloom.bloomDur = 3200;
+    bloom.bloom();
+  }));
 }
 
 async function save(patch, quiet) {
@@ -251,6 +267,7 @@ async function boot() {
       api.app.info(), api.settings.get(), api.account.get(), api.modules.get(), api.modules.performance(),
     ]);
     Object.assign(state, { info, settings, account, modules, perf });
+    bloom.setTheme(settings.bloomTheme || 'auto');
     $('#build-tag').textContent = 'v' + info.version;
     $('#mc-version').textContent = info.mc;
     renderAccount();

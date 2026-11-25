@@ -8,18 +8,68 @@
 
 (function () {
   const RAMP = ' .,:-=+*#%@';
-  const PETAL = ['#5a2236', '#8a2f52', '#b8436f', '#e0608f', '#f08cb0', '#f7b6cc', '#fde0ea'];
-  const POLLEN = ['#6b4a16', '#b07d22', '#f0b545', '#ffd678', '#fff0c2'];
-  const LEAF = ['#16301f', '#24503a', '#3a7a55', '#5fae80', '#9fd8b4', '#d4f5df'];
-  const SEED = '#f4a6c0';
+  // Seasonal looks. Layers run outside-in: count, length, width, open angle (rad from vertical),
+  // closed angle, tip curl, twist. Motes are the little particles drifting around the open flower.
+  const L = (n, len, w, open, closed, curl, twist) => ({ n, len, w, open, closed, curl, twist });
+  const ROSE_LEAF = ['#16301f', '#24503a', '#3a7a55', '#5fae80', '#9fd8b4', '#d4f5df'];
+  const THEMES = {
+    rose: {
+      label: 'Rose', petal: ['#5a2236', '#8a2f52', '#b8436f', '#e0608f', '#f08cb0', '#f7b6cc', '#fde0ea'],
+      pollen: ['#6b4a16', '#b07d22', '#f0b545', '#ffd678', '#fff0c2'], leaf: ROSE_LEAF, center: 0.17,
+      layers: [L(6, 1.0, 0.33, 1.22, 0.22, 0.5, 0), L(6, 0.8, 0.29, 0.9, 0.16, 0.35, Math.PI / 6), L(5, 0.6, 0.25, 0.58, 0.1, 0.22, Math.PI / 5), L(4, 0.42, 0.21, 0.3, 0.05, 0.1, Math.PI / 4)],
+      glow: [232, 93, 138], glow2: [159, 216, 180],
+      motes: { count: 46, dir: 1, speed: 0.07, chars: '.·', colors: ['#ffd678', '#f7b6cc'] },
+    },
+    sakura: {
+      label: 'Sakura', petal: ['#6b3a4a', '#a05d72', '#d58da3', '#f2b5c6', '#fbd3de', '#ffe7ee', '#fff6f9'],
+      pollen: ['#7a3d4f', '#c0607e', '#e98aa7', '#ffd0dc', '#fff0f5'], leaf: ['#1e2e1c', '#33502c', '#4f7a3f', '#78a861', '#a9d68f', '#dcf3cf'], center: 0.11,
+      layers: [L(5, 0.95, 0.44, 1.32, 0.25, 0.45, 0), L(5, 0.62, 0.34, 1.0, 0.18, 0.3, Math.PI / 5)],
+      glow: [251, 196, 214], glow2: [255, 240, 245],
+      motes: { count: 34, dir: -1, speed: 0.11, chars: '✿*,', colors: ['#fbd3de', '#f2b5c6', '#ffe7ee'], drift: 0.22 },
+    },
+    sunflower: {
+      label: 'Sunflower', petal: ['#5a3d0a', '#8f6210', '#c98d14', '#f0b52a', '#ffd04d', '#ffe38a', '#fff3c4'],
+      pollen: ['#2a1608', '#4a2a10', '#6e4219', '#94602a', '#c08a45'], leaf: ROSE_LEAF, center: 0.3,
+      layers: [L(18, 0.98, 0.12, 1.42, 0.3, 0.35, 0), L(16, 0.84, 0.11, 1.25, 0.22, 0.3, Math.PI / 16)],
+      glow: [255, 196, 70], glow2: [120, 190, 120],
+      motes: { count: 40, dir: 1, speed: 0.06, chars: '.·', colors: ['#ffe38a', '#fff3c4'] },
+    },
+    marigold: {
+      label: 'Marigold', petal: ['#4f1a06', '#7e2c0a', '#b3470f', '#e06a17', '#f58f2a', '#ffb454', '#ffd79a'],
+      pollen: ['#4a1d05', '#7a3208', '#a8500f', '#d27a22', '#f0a957'], leaf: ['#1d2a14', '#304420', '#4a6630', '#6e8f45', '#9bb86a', '#cfe2a8'], center: 0.12,
+      layers: [L(9, 0.95, 0.24, 1.3, 0.2, 0.7, 0), L(8, 0.8, 0.23, 1.05, 0.16, 0.6, Math.PI / 8), L(8, 0.64, 0.21, 0.78, 0.12, 0.45, Math.PI / 5), L(7, 0.48, 0.19, 0.5, 0.08, 0.3, Math.PI / 3), L(5, 0.32, 0.16, 0.25, 0.04, 0.15, 0.4)],
+      glow: [240, 120, 40], glow2: [200, 150, 60],
+      motes: { count: 30, dir: -1, speed: 0.09, chars: '❦,\'', colors: ['#e06a17', '#b3470f', '#f0a957'], drift: 0.3 },
+    },
+    pumpkin: {
+      label: 'Pumpkin', petal: ['#3a1305', '#6b2408', '#a33c0c', '#d9601a', '#f27e28', '#ffa04a', '#ffc98a'],
+      pollen: ['#120818', '#24102e', '#3c1a4d', '#5c2a73', '#8a49a8'], leaf: ['#13200f', '#22361a', '#34502a', '#4d6e3b', '#6f9152', '#9fba7c'], center: 0.2,
+      layers: [L(8, 0.92, 0.3, 1.18, 0.18, 0.25, 0), L(8, 0.7, 0.27, 0.85, 0.12, 0.2, Math.PI / 8), L(6, 0.48, 0.22, 0.5, 0.08, 0.12, 0.3)],
+      glow: [242, 126, 40], glow2: [138, 73, 168],
+      motes: { count: 26, dir: 1, speed: 0.05, chars: '·.*', colors: ['#8a49a8', '#f27e28'] },
+    },
+    frost: {
+      label: 'Frost', petal: ['#1b2e45', '#2d4d73', '#4a78a6', '#7aa8d4', '#a9cdef', '#d3e9fb', '#f3faff'],
+      pollen: ['#5d6f80', '#8fa3b5', '#c2d3e0', '#e6f1f8', '#ffffff'], leaf: ['#16262a', '#24413f', '#3c6660', '#5e938a', '#8fc2b8', '#c9ece5'], center: 0.15,
+      layers: [L(6, 1.0, 0.22, 1.25, 0.2, 0.15, 0), L(6, 0.8, 0.2, 0.95, 0.15, 0.1, Math.PI / 6), L(6, 0.58, 0.17, 0.62, 0.1, 0.05, 0), L(6, 0.38, 0.14, 0.32, 0.05, 0.02, Math.PI / 6)],
+      glow: [140, 190, 240], glow2: [230, 245, 255],
+      motes: { count: 70, dir: -1, speed: 0.13, chars: '*·.❄', colors: ['#ffffff', '#d3e9fb', '#a9cdef'], drift: 0.12 },
+    },
+  };
 
-  // Layers from outside in: count, length, width, open angle (rad from vertical), closed angle, tip curl, twist
-  const LAYERS = [
-    { n: 6, len: 1.0, w: 0.33, open: 1.22, closed: 0.22, curl: 0.5, twist: 0 },
-    { n: 6, len: 0.8, w: 0.29, open: 0.9, closed: 0.16, curl: 0.35, twist: Math.PI / 6 },
-    { n: 5, len: 0.6, w: 0.25, open: 0.58, closed: 0.1, curl: 0.22, twist: Math.PI / 5 },
-    { n: 4, len: 0.42, w: 0.21, open: 0.3, closed: 0.05, curl: 0.1, twist: Math.PI / 4 },
-  ];
+  /** Which look fits today's date. */
+  function seasonFor(d = new Date()) {
+    const m = d.getMonth() + 1, day = d.getDate();
+    if (m === 10 && day >= 15) return 'pumpkin';
+    if (m === 12 || m === 1) return 'frost';
+    if (m === 2) return 'rose';
+    if (m >= 3 && m <= 5) return 'sakura';
+    if (m >= 6 && m <= 8) return 'sunflower';
+    return 'marigold';
+  }
+
+  let T = THEMES.rose;
+  let PETAL = T.petal, POLLEN = T.pollen, LEAF = T.leaf, LAYERS = T.layers;
   const NU = 34, NV = 15;
 
   const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
@@ -30,11 +80,11 @@
   /** Petal samples in petal-local terms; the 3D shape is rebuilt each frame from openness. */
   function buildSamples() {
     const petals = [];
-    LAYERS.forEach((L, li) => {
-      for (let k = 0; k < L.n; k++) {
-        const phi = (k / L.n) * Math.PI * 2 + L.twist + li * 0.13;
+    LAYERS.forEach((Ly, li) => {
+      for (let k = 0; k < Ly.n; k++) {
+        const phi = (k / Ly.n) * Math.PI * 2 + Ly.twist + li * 0.13;
         const jitter = 0.92 + ((Math.sin(k * 12.9898 + li * 78.233) * 43758.5453) % 1 + 1) % 1 * 0.16;
-        petals.push({ L, li, phi, jitter });
+        petals.push({ L: Ly, li, phi, jitter });
       }
     });
     const pollen = [];
@@ -66,7 +116,8 @@
       this.anchorDur = 1;
       this.particles = [];
       this.onBloomed = null;
-      this.motes = Array.from({ length: 46 }, () => this.newMote(true));
+      this.moteDraw = [];
+      this.setTheme('rose');
       this.pointer = { x: 0, y: 0, tx: 0, ty: 0 };
       this.resize();
       window.addEventListener('resize', () => this.resize());
@@ -114,11 +165,25 @@
       };
     }
 
+    /** Switch seasonal look: 'auto' or a theme key. Rebuilds petal geometry and motes. */
+    setTheme(name) {
+      const key = name === 'auto' || !THEMES[name] ? seasonFor() : name;
+      T = THEMES[key];
+      PETAL = T.petal; POLLEN = T.pollen; LEAF = T.leaf; LAYERS = T.layers;
+      this.theme = key;
+      this.samples = buildSamples();
+      this.motes = Array.from({ length: T.motes.count }, () => this.newMote(true));
+      return key;
+    }
+
     newMote(anywhere) {
-      const a = Math.random() * Math.PI * 2, r = 0.25 + Math.random() * 1.05;
+      const M = T.motes;
+      const a = Math.random() * Math.PI * 2, r = 0.25 + Math.random() * 1.1;
+      const start = M.dir > 0 ? -0.9 : 1.1;
       return {
-        x: Math.cos(a) * r, z: Math.sin(a) * r, y: anywhere ? -0.9 + Math.random() * 1.8 : -0.9,
-        sp: 0.05 + Math.random() * 0.09, ph: Math.random() * 6.28, c: Math.random() < 0.6 ? 103 : 5,
+        x: Math.cos(a) * r, z: Math.sin(a) * r, y: anywhere ? -0.9 + Math.random() * 2.0 : start,
+        sp: M.speed * (0.6 + Math.random() * 0.8), ph: Math.random() * 6.28,
+        ch: M.chars[(Math.random() * M.chars.length) | 0], color: M.colors[(Math.random() * M.colors.length) | 0],
       };
     }
 
@@ -245,7 +310,7 @@
           }
         }
         // pollen dome
-        const pr = 0.17 * scale, py = yOff + 0.04 * scale;
+        const pr = T.center * scale, py = yOff + 0.04 * scale;
         for (const p of this.samples.pollen) {
           const x = p[0] * pr, y = py + p[1] * pr * 0.8, z = p[2] * pr;
           const grain = (Math.sin(p[0] * 40 + p[2] * 37) + 1) * 0.5;
@@ -290,15 +355,23 @@
         }
       }
 
-      // drifting pollen motes around the open flower
-      if (this.state === 'open') {
+      // seasonal motes: pollen rising, petals / leaves / snow falling
+      this.moteDraw.length = 0;
+      const moteVis = this.state === 'open' ? 1 : this.state === 'blooming' ? clamp01(((now - this.t0) / this.bloomDur - 0.6) / 0.4) : 0;
+      if (moteVis > 0) {
+        const M = T.motes, drift = M.drift || 0;
         for (let i = 0; i < this.motes.length; i++) {
           const m = this.motes[i];
-          m.y += m.sp * dt;
-          if (m.y > 1.0) { this.motes[i] = this.newMote(false); continue; }
-          const sway = Math.sin(now / 900 + m.ph) * 0.06;
-          const fade = Math.min(1, (m.y + 0.9) * 2) * Math.min(1, (1.0 - m.y) * 3);
-          plot(m.x + sway, m.y, m.z, undefined, 0, 0, m.c, 0.1 + 0.08 * fade);
+          m.y += m.sp * dt * M.dir;
+          m.x += drift * dt * 0.25;
+          if (m.y > 1.1 || m.y < -0.95 || m.x > 1.8) { this.motes[i] = this.newMote(false); continue; }
+          const sway = Math.sin(now / 900 + m.ph) * (0.06 + drift * 0.2);
+          const fade = Math.min(1, (m.y + 0.95) * 2.5) * Math.min(1, (1.1 - m.y) * 2.5);
+          const x = m.x + sway, y = m.y, z = m.z;
+          const x1 = x * cyw + z * syw, z1 = -x * syw + z * cyw;
+          const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
+          const ooz = 1 / (z2 + D);
+          this.moteDraw.push([cx + K * x1 * ooz, cy - K * y2 * ooz, m.ch, m.color, fade * moteVis * (0.35 + 0.5 * Math.min(1, ooz * 2.6))]);
         }
       }
       if (pts) this.lastPoints = pts;
@@ -333,9 +406,9 @@
       if (shapeNow > 0) {
         const gx = an.x * this.w, gy = an.y * this.h, gr = Math.min(this.w, this.h) * an.size * 2.2;
         const grad = g.createRadialGradient(gx, gy, 0, gx, gy, gr);
-        grad.addColorStop(0, `rgba(232, 93, 138, ${0.13 * shapeNow})`);
-        grad.addColorStop(0.5, `rgba(159, 216, 180, ${0.04 * shapeNow})`);
-        grad.addColorStop(1, 'rgba(159, 216, 180, 0)');
+        grad.addColorStop(0, `rgba(${T.glow.join(',')}, ${0.13 * shapeNow})`);
+        grad.addColorStop(0.5, `rgba(${T.glow2.join(',')}, ${0.04 * shapeNow})`);
+        grad.addColorStop(1, `rgba(${T.glow2.join(',')}, 0)`);
         g.fillStyle = grad;
         g.beginPath(); g.arc(gx, gy, gr, 0, Math.PI * 2); g.fill();
       }
@@ -359,11 +432,19 @@
         }
       }
 
+      for (const [mx, my, ch, color, alpha] of this.moteDraw) {
+        if (alpha <= 0.02) continue;
+        g.globalAlpha = alpha;
+        g.fillStyle = color;
+        g.fillText(ch, mx, my);
+      }
+      g.globalAlpha = 1;
+
       if (this.state === 'seed' || this.state === 'gone') {
         const a = this.currentAnchor();
         const pulse = 0.55 + Math.sin(now / 420) * 0.35;
         g.globalAlpha = pulse;
-        g.fillStyle = SEED;
+        g.fillStyle = PETAL[4];
         const sx = Math.round(a.x * this.w / cw) * cw, sy = Math.round((a.y * this.h) / ch) * ch;
         g.fillText('•', sx, sy);
         g.globalAlpha = pulse * 0.4;
@@ -374,5 +455,7 @@
     }
   }
 
+  FlowerBloom.THEMES = Object.fromEntries(Object.entries(THEMES).map(([k, v]) => [k, v.label]));
+  FlowerBloom.seasonFor = seasonFor;
   window.FlowerBloom = FlowerBloom;
 })();

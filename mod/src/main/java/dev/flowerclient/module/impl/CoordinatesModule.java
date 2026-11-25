@@ -45,7 +45,7 @@ public class CoordinatesModule extends HudModule {
         for (int i = 0; i < l.length; i++) {
             int y = PAD + i * 10;
             if (i < 3) {
-                ctx.drawText(mc.textRenderer, l[i].substring(0, 1), PAD, y, Theme.ACCENT, true);
+                ctx.drawText(mc.textRenderer, l[i].substring(0, 1), PAD, y, Theme.hudAccent, true);
                 ctx.drawText(mc.textRenderer, l[i].substring(2), PAD + 10, y, Theme.TEXT, true);
             } else {
                 ctx.drawText(mc.textRenderer, l[i], PAD, y, Theme.MUTED, true);

@@ -59,6 +59,14 @@ public class FlowerScreen extends Screen {
         return rows * TILE_H + Math.max(0, rows - 1) * GAP;
     }
 
+    /** Clear glass: just the vanilla blur (uses the Menu Background Blurriness setting) and a faint tint. */
+    @Override
+    public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        if (client == null || client.world == null) renderPanoramaBackground(ctx, delta);
+        applyBlur(delta);
+        ctx.fill(0, 0, width, height, 0x14000000);
+    }
+
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
@@ -70,8 +78,9 @@ public class FlowerScreen extends Screen {
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, slide, 0);
 
-        Theme.round(ctx, px, py, pw, ph, Theme.PANEL);
-        Theme.outline(ctx, px, py, pw, ph, Theme.LINE);
+        Theme.round(ctx, px, py, pw, ph, Theme.GLASS);
+        Theme.outline(ctx, px, py, pw, ph, Theme.GLASS_EDGE);
+        ctx.fill(px + 2, py + 1, px + pw - 2, py + 2, Theme.GLASS_SHINE);
 
         // Header: wordmark + Edit HUD
         int hx = px + 10, hy = py + 11;
@@ -82,10 +91,10 @@ public class FlowerScreen extends Screen {
         String edit = "Edit HUD";
         int ew = tr.getWidth(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
         boolean eh = Theme.inside(mouseX, mouseY - slide, ex, ey, ew, 16);
-        Theme.panel(ctx, ex, ey, ew, 16, eh ? Theme.ACCENT : Theme.PANEL_3);
+        Theme.panel(ctx, ex, ey, ew, 16, eh ? Theme.ACCENT : Theme.GLASS_HOVER);
         ctx.drawText(tr, edit, ex + 7, ey + 4, eh ? 0xFF1A1418 : Theme.TEXT, false);
 
-        ctx.fill(px + 1, py + HEADER - 1, px + pw - 1, py + HEADER, Theme.LINE);
+        ctx.fill(px + 1, py + HEADER - 1, px + pw - 1, py + HEADER, Theme.GLASS_TILE);
 
         // Tabs
         int tx = px + 10, ty = py + HEADER + 5;
@@ -120,7 +129,7 @@ public class FlowerScreen extends Screen {
         if (ch > view) {
             int barH = Math.max(14, view * view / ch);
             int barY = top + Math.round((view - barH) * (scroll / (ch - view)));
-            ctx.fill(px + pw - 4, barY, px + pw - 2, barY + barH, Theme.PANEL_3);
+            ctx.fill(px + pw - 4, barY, px + pw - 2, barY + barH, Theme.GLASS_EDGE);
         }
 
         // Footer
@@ -136,9 +145,9 @@ public class FlowerScreen extends Screen {
         a += ((m.isEnabled() ? 1f : 0f) - a) * 0.3f;
         anim.put(m, a);
 
-        Theme.panel(ctx, x, y, w, TILE_H, hover ? Theme.PANEL_3 : Theme.PANEL_2);
+        Theme.panel(ctx, x, y, w, TILE_H, hover ? Theme.GLASS_HOVER : Theme.GLASS_TILE);
         // left accent bar shows enabled state
-        ctx.fill(x, y + 4, x + 2, y + TILE_H - 4, Theme.lerpColor(Theme.LINE, Theme.ACCENT_DEEP, a));
+        ctx.fill(x, y + 4, x + 2, y + TILE_H - 4, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
 
         ctx.drawText(tr, m.getName(), x + 8, y + 7, Theme.TEXT, false);
         ctx.getMatrices().push();
@@ -149,7 +158,7 @@ public class FlowerScreen extends Screen {
 
         // toggle pill
         int sw = 18, sh = 9, sx = x + w - sw - 7, sy = y + 6;
-        Theme.panel(ctx, sx, sy, sw, sh, Theme.lerpColor(Theme.LINE, Theme.ACCENT_DEEP, a));
+        Theme.panel(ctx, sx, sy, sw, sh, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
         int knob = sx + 1 + Math.round(a * (sw - 9));
         Theme.panel(ctx, knob, sy + 1, 7, 7, Theme.lerpColor(Theme.MUTED, Theme.TEXT, a));
     }

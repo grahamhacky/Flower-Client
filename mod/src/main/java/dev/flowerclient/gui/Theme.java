@@ -15,6 +15,17 @@ public final class Theme {
     public static final int PANEL_3 = 0xFF2A232B;
     public static final int LINE = 0xFF33293A;
 
+    // Glass: the menu sits on a blurred, barely tinted view of the world
+    public static final int GLASS = 0x5A140F16;
+    public static final int GLASS_EDGE = 0x38FFFFFF;
+    public static final int GLASS_SHINE = 0x24FFFFFF;
+    public static final int GLASS_TILE = 0x14FFFFFF;
+    public static final int GLASS_HOVER = 0x26FFFFFF;
+    public static final int GLASS_OFF = 0x40FFFFFF;
+
+    /** HUD accent. Biome Tint changes this every tick; otherwise it stays the blush pink. */
+    public static int hudAccent = ACCENT;
+
     private Theme() {}
 
     /** Filled rectangle with 1px-chamfered corners — reads as rounded at GUI scale. */

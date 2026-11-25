@@ -27,6 +27,7 @@ const MODULES = [
   ['Speed', 'Horizontal blocks per second', false, 'HUD'],
   ['Zoom', 'Hold C to zoom, scroll to adjust', true, 'Utility'],
   ['Toggle Sprint', 'Always sprint when walking forward', false, 'Utility'],
+  ['Biome Tint', "HUD accent follows the biome you're in", true, 'Utility'],
 ].map(([name, desc, def, category]) => ({ name, desc, def, category }));
 
 function bundledModDirs() {

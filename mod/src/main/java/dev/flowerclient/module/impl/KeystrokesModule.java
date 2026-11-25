@@ -50,7 +50,7 @@ public class KeystrokesModule extends HudModule {
     private void key(DrawContext ctx, MinecraftClient mc, int i, KeyBinding kb, int x, int y, int w, int h, String label) {
         float target = kb.isPressed() ? 1f : 0f;
         glow[i] += (target - glow[i]) * 0.35f;
-        int bg = Theme.lerpColor(Theme.HUD_BG, Theme.ACCENT_SOFT, glow[i]);
+        int bg = Theme.lerpColor(Theme.HUD_BG, Theme.hudAccent, glow[i]);
         Theme.panel(ctx, x, y, w, h, bg);
         if (!label.isEmpty()) {
             int tw = mc.textRenderer.getWidth(label);

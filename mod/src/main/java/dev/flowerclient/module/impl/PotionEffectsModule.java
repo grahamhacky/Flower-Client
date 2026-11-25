@@ -52,7 +52,7 @@ public class PotionEffectsModule extends HudModule {
         for (int i = 0; i < r.size(); i++) {
             int y = PAD + i * 10;
             ctx.drawText(mc.textRenderer, r.get(i)[0], PAD, y, Theme.TEXT, true);
-            ctx.drawText(mc.textRenderer, r.get(i)[1], w - PAD - mc.textRenderer.getWidth(r.get(i)[1]), y, Theme.ACCENT, true);
+            ctx.drawText(mc.textRenderer, r.get(i)[1], w - PAD - mc.textRenderer.getWidth(r.get(i)[1]), y, Theme.hudAccent, true);
         }
     }
 }
