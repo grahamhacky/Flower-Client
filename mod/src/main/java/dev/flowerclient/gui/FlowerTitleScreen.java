@@ -27,23 +27,26 @@ public class FlowerTitleScreen extends Screen {
     protected void init() {
         opened = Util.getMeasuringTimeMs();
         if (firstShown < 0) firstShown = opened;
-        int x = Math.max(24, width / 14), bw = 150, bh = 20, gap = 4;
-        int top = height / 2 - 26;
+        int x = Math.max(24, width / 14), bw = 164, bh = 20, gap = 5;
+        int top = height / 2 - 34;
+        int row = 0;
 
         addDrawableChild(new FlowerButton(x, top, bw, bh, Text.translatable("menu.singleplayer"),
                 b -> client.setScreen(new SelectWorldScreen(this)), FlowerButton.Style.PRIMARY));
-        addDrawableChild(new FlowerButton(x, top + (bh + gap), bw, bh, Text.translatable("menu.multiplayer"),
+        addDrawableChild(new FlowerButton(x, top + (bh + gap) * ++row, bw, bh, Text.translatable("menu.multiplayer"),
                 b -> client.setScreen(new MultiplayerScreen(this))));
-        addDrawableChild(new FlowerButton(x, top + (bh + gap) * 2, bw, bh, Text.translatable("menu.options"),
+        addDrawableChild(new FlowerButton(x, top + (bh + gap) * ++row, bw, bh, Text.translatable("menu.options"),
                 b -> client.setScreen(new OptionsScreen(this, client.options))));
-        addDrawableChild(new FlowerButton(x, top + (bh + gap) * 3, bw, bh, Text.literal("✿ Flower"),
+        addDrawableChild(new FlowerButton(x, top + (bh + gap) * ++row, bw, bh, Text.literal("✿ Flower Menu"),
                 b -> client.setScreen(new FlowerScreen(this))));
+        // Language + Accessibility share a row with short labels so neither overflows its box.
         int half = (bw - gap) / 2;
-        addDrawableChild(new FlowerButton(x, top + (bh + gap) * 4 + 6, half, bh, Text.translatable("options.language"),
+        int rowY = top + (bh + gap) * ++row + 6;
+        addDrawableChild(new FlowerButton(x, rowY, half, bh, Text.literal("Language"),
                 b -> client.setScreen(new LanguageOptionsScreen(this, client.options, client.getLanguageManager())), FlowerButton.Style.CENTER));
-        addDrawableChild(new FlowerButton(x + half + gap, top + (bh + gap) * 4 + 6, half, bh, Text.translatable("options.accessibility"),
+        addDrawableChild(new FlowerButton(x + half + gap, rowY, bw - half - gap, bh, Text.literal("Accessibility"),
                 b -> client.setScreen(new AccessibilityOptionsScreen(this, client.options)), FlowerButton.Style.CENTER));
-        addDrawableChild(new FlowerButton(x, top + (bh + gap) * 5 + 6, bw, bh, Text.translatable("menu.quit"),
+        addDrawableChild(new FlowerButton(x, top + (bh + gap) * ++row + 12, bw, bh, Text.translatable("menu.quit"),
                 b -> client.scheduleStop()));
     }
 
@@ -70,7 +73,7 @@ public class FlowerTitleScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
 
         int x = Math.max(24, width / 14);
-        int top = height / 2 - 26;
+        int top = height / 2 - 34;
 
         // the bloom keeps growing from the first time the menu appeared, then idles
         float t = (now - firstShown) / 1000f;
