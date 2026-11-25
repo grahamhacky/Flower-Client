@@ -334,8 +334,38 @@ function renderSettings() {
   renderIntegrations();
 }
 
+async function renderCape() {
+  const box = $('#cape-control');
+  if (!box) return;
+  let st = { unlocked: false, cape: 'none' };
+  try { st = await api.cape.status(); } catch { /* ignore */ }
+  if (st.unlocked) {
+    box.innerHTML = `<div class="cape-on"><span class="cape-badge">\u2713 Flower cape unlocked</span><label class="switch"><input type="checkbox" id="cape-wear" ${st.cape !== 'none' ? 'checked' : ''}/><span></span></label><span class="cape-wear-label">Wear it</span></div>`;
+    $('#cape-wear').addEventListener('change', async (e) => { try { await api.cape.set(e.target.checked); } catch (err) { toast(err.message, 'error'); } });
+  } else {
+    box.innerHTML = `<div class="cape-redeem"><input type="text" id="cape-code" class="mono" placeholder="Enter code" spellcheck="false" autocomplete="off" /><button type="button" class="ghost" id="cape-redeem-btn">Redeem</button></div>`;
+    const go = async () => {
+      const code = $('#cape-code').value.trim();
+      if (!code) return;
+      try {
+        const r = await api.cape.redeem(code);
+        if (r.ok) { toast(r.message + ' Restart Minecraft to see it.'); renderCape(); }
+        else { toast(r.message, 'error'); $('#cape-code').select(); }
+      } catch (err) { toast(err.message, 'error'); }
+    };
+    $('#cape-redeem-btn').addEventListener('click', go);
+    $('#cape-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  }
+}
+
+async function renderBackground() {
+  try { $('#bg-state').value = (await api.background.has()) ? 'Custom image set' : 'Default panorama'; } catch { /* ignore */ }
+}
+
 async function renderIntegrations() {
   try { $('#discordAppId').value = await api.discord.getAppId(); } catch { /* ignore */ }
+  renderCape();
+  renderBackground();
 }
 
 function renderThemes() {
@@ -381,6 +411,11 @@ $('#discordAppId').addEventListener('change', async (e) => {
   try { e.target.value = await api.discord.setAppId(e.target.value); toast('Saved. Enable "Discord Presence" in Mods, and make sure Discord is open.'); }
   catch (err) { toast(err.message, 'error'); }
 });
+$('#bg-choose').addEventListener('click', async () => {
+  try { if (await api.background.choose()) { toast('Menu background set. Restart Minecraft to see it.'); renderBackground(); } }
+  catch (err) { toast(err.message, 'error'); }
+});
+$('#bg-clear').addEventListener('click', async () => { try { await api.background.clear(); renderBackground(); toast('Back to the default panorama.'); } catch (err) { toast(err.message, 'error'); } });
 $('#discord-help').addEventListener('click', () => {
   window.open('https://discord.com/developers/applications', '_blank', 'noopener');
   toast('Create an application, copy its Application ID here, and upload a square icon named "flower" under Rich Presence > Art Assets.', 'info', 9000);
@@ -398,6 +433,23 @@ function renderFacts() {
   ];
   $('#facts').innerHTML = items.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
 }
+
+
+/* ---------------- auto-update ---------------- */
+(function updater() {
+  const banner = $('#update-banner'), text = $('#update-text'), btn = $('#update-action');
+  if (!banner) return;
+  let state = 'idle';
+  const show = () => { banner.hidden = false; };
+  api.updater.onAvailable(({ version }) => { state = 'available'; text.textContent = `Flower ${version} is available.`; btn.textContent = 'Download'; btn.disabled = false; show(); });
+  api.updater.onProgress(({ percent }) => { if (state === 'downloading') { text.textContent = `Downloading update… ${percent}%`; } });
+  api.updater.onReady(({ version }) => { state = 'ready'; text.textContent = `Flower ${version} is ready.`; btn.textContent = 'Restart & install'; btn.disabled = false; show(); });
+  btn.addEventListener('click', async () => {
+    if (state === 'available') { state = 'downloading'; btn.disabled = true; text.textContent = 'Downloading update…'; try { await api.updater.download(); } catch (e) { toast(e.message, 'error'); btn.disabled = false; } }
+    else if (state === 'ready') { try { await api.updater.install(); } catch (e) { toast(e.message, 'error'); } }
+  });
+  $('#update-dismiss').addEventListener('click', () => { banner.hidden = true; });
+})();
 
 /* ---------------- boot ---------------- */
 async function boot() {

@@ -1,6 +1,9 @@
 package dev.flowerclient;
 
 import dev.flowerclient.config.ConfigManager;
+import dev.flowerclient.render.CapeFeatureRenderer;
+import dev.flowerclient.render.CapeManager;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import dev.flowerclient.gui.FlowerButton;
 import dev.flowerclient.module.SkyTime;
 import dev.flowerclient.render.FlowerLoading;
@@ -25,6 +28,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.MinecraftClient;
@@ -56,6 +60,12 @@ public final class FlowerClient implements ClientModInitializer {
         ModuleManager.init();
         ConfigManager.load();
 
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, ctx) -> {
+            if (renderer instanceof PlayerEntityRenderer playerRenderer) {
+                helper.register(new CapeFeatureRenderer(playerRenderer));
+            }
+        });
+
         menuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.flowerclient.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "category.flowerclient"));
         zoomKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
@@ -67,6 +77,7 @@ public final class FlowerClient implements ClientModInitializer {
             while (menuKey.wasPressed()) client.setScreen(new FlowerScreen(client.currentScreen));
             while (hudEditorKey.wasPressed()) client.setScreen(new HudEditorScreen(client.currentScreen));
             for (Module m : ModuleManager.all()) m.tick(client);
+            CapeManager.maybeFetch();
         });
 
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> {

@@ -7,6 +7,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
+import net.fabricmc.loader.api.FabricLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.io.InputStream;
 
@@ -15,6 +18,11 @@ public final class FlowerTextures {
     public static final Identifier WORDMARK = Identifier.of("flowerclient", "dynamic/wordmark");
     public static final int WORDMARK_W = 1024, WORDMARK_H = 512;
     private static boolean tried, ok;
+
+    public static final Identifier MENU_BG = Identifier.of("flowerclient", "dynamic/menubg");
+    public static int MENU_BG_W, MENU_BG_H;
+    private static long menuBgMtime = -1;
+    private static boolean menuBgLoaded;
 
     private FlowerTextures() {}
 
@@ -46,5 +54,28 @@ public final class FlowerTextures {
     /** Same, anchored at the left edge. */
     public static void wordmarkLeft(DrawContext ctx, int x, int cy, int width, float alpha) {
         wordmark(ctx, x + width / 2, cy, width, alpha);
+    }
+
+    /** Custom title-screen background from config/flowerclient/background.png, or null. Reloads on change. */
+    public static Identifier menuBackground() {
+        Path f = FabricLoader.getInstance().getConfigDir().resolve("flowerclient").resolve("background.png");
+        try {
+            if (!Files.exists(f)) { menuBgLoaded = false; menuBgMtime = -1; return null; }
+            long mt = Files.getLastModifiedTime(f).toMillis();
+            if (menuBgLoaded && mt == menuBgMtime) return MENU_BG;
+            try (InputStream in = Files.newInputStream(f)) {
+                NativeImage img = NativeImage.read(in);
+                MENU_BG_W = img.getWidth();
+                MENU_BG_H = img.getHeight();
+                MinecraftClient.getInstance().getTextureManager().registerTexture(MENU_BG, new NativeImageBackedTexture(img));
+            }
+            menuBgMtime = mt;
+            menuBgLoaded = true;
+            return MENU_BG;
+        } catch (Exception e) {
+            FlowerClient.LOG.warn("Could not load menu background", e);
+            menuBgLoaded = false;
+            return null;
+        }
     }
 }

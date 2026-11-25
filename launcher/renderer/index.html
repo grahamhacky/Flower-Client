@@ -154,6 +154,18 @@
           <div class="control"><input type="text" id="jvmArgs" class="mono" spellcheck="false" /></div>
         </div>
         <div class="field">
+          <div class="label"><b>Flower cape</b><span>A cosmetic cape other Flower users can see. Redeem a code to unlock it.</span></div>
+          <div class="control" id="cape-control"></div>
+        </div>
+        <div class="field">
+          <div class="label"><b>Menu background</b><span>Use your own image on the title screen instead of the panorama.</span></div>
+          <div class="control path">
+            <input type="text" id="bg-state" class="mono" readonly />
+            <button type="button" class="ghost" id="bg-choose">Choose image</button>
+            <button type="button" class="ghost" id="bg-clear">Clear</button>
+          </div>
+        </div>
+        <div class="field">
           <div class="label"><b>Discord App ID</b><span>For Discord Rich Presence. Create a free app at discord.com/developers, paste its Application ID, then enable "Discord Presence" in Mods.</span></div>
           <div class="control path">
             <input type="text" id="discordAppId" class="mono" inputmode="numeric" placeholder="e.g. 1312345678901234567" spellcheck="false" />
@@ -176,6 +188,13 @@
       <pre class="log mono" id="log"></pre>
     </section>
   </main>
+
+  <div class="update-banner" id="update-banner" hidden>
+    <span class="update-dot"></span>
+    <span id="update-text">A new version of Flower is available.</span>
+    <button class="update-btn" id="update-action">Update</button>
+    <button class="update-x" id="update-dismiss" aria-label="Dismiss">×</button>
+  </div>
 
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 

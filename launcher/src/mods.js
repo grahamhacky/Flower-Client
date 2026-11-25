@@ -148,4 +148,49 @@ function setDiscordAppId(gameDir, id) {
   return cfg.discordAppId;
 }
 
-module.exports = { syncMods, readModules, setModule, getDiscordAppId, setDiscordAppId, PERFORMANCE, findBundledFlowerJar };
+function writeRawConfig(gameDir, cfg) {
+  const file = configPath(gameDir);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(cfg, null, 2));
+}
+
+const CAPE_CODES = { RELEASE2027: 'flower' };
+
+/** Returns { unlocked, cape }. */
+function capeStatus(gameDir) {
+  const c = readRawConfig(gameDir);
+  return { unlocked: !!c.capeUnlocked, cape: c.cape || 'flower' };
+}
+
+/** Redeem a code. Returns { ok, cape?, message }. */
+function redeemCape(gameDir, code) {
+  const key = String(code || '').trim().toUpperCase();
+  const cape = CAPE_CODES[key];
+  if (!cape) return { ok: false, message: "That code isn't valid." };
+  const cfg = readRawConfig(gameDir);
+  cfg.capeUnlocked = true;
+  cfg.cape = cape;
+  writeRawConfig(gameDir, cfg);
+  return { ok: true, cape, message: 'Flower cape unlocked!' };
+}
+
+/** Equip or unequip an unlocked cape. */
+function setCape(gameDir, wear) {
+  const cfg = readRawConfig(gameDir);
+  if (!cfg.capeUnlocked) return { unlocked: false, cape: 'none' };
+  cfg.cape = wear ? 'flower' : 'none';
+  writeRawConfig(gameDir, cfg);
+  return { unlocked: true, cape: cfg.cape };
+}
+
+function backgroundPath(gameDir) { return path.join(gameDir, 'config', 'flowerclient', 'background.png'); }
+function hasBackground(gameDir) { try { return fs.existsSync(backgroundPath(gameDir)); } catch { return false; } }
+function setBackground(gameDir, srcPath) {
+  const dest = backgroundPath(gameDir);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(srcPath, dest);
+  return true;
+}
+function clearBackground(gameDir) { fs.rmSync(backgroundPath(gameDir), { force: true }); return true; }
+
+module.exports = { syncMods, readModules, setModule, getDiscordAppId, setDiscordAppId, capeStatus, redeemCape, setCape, hasBackground, setBackground, clearBackground, PERFORMANCE, findBundledFlowerJar };

@@ -3,6 +3,7 @@ package dev.flowerclient.gui;
 import dev.flowerclient.FlowerClient;
 import dev.flowerclient.render.FlowerArt;
 import dev.flowerclient.render.FlowerTextures;
+import net.minecraft.util.Identifier;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -52,7 +53,14 @@ public class FlowerTitleScreen extends Screen {
 
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        renderPanoramaBackground(ctx, delta);
+        Identifier bg = FlowerTextures.menuBackground();
+        if (bg != null && FlowerTextures.MENU_BG_W > 0) {
+            float scale = Math.max((float) width / FlowerTextures.MENU_BG_W, (float) height / FlowerTextures.MENU_BG_H);
+            int dw = Math.round(FlowerTextures.MENU_BG_W * scale), dh = Math.round(FlowerTextures.MENU_BG_H * scale);
+            ctx.drawTexture(bg, (width - dw) / 2, (height - dh) / 2, 0, 0, dw, dh, dw, dh);
+        } else {
+            renderPanoramaBackground(ctx, delta);
+        }
         // dark wash, heavier on the left where the menu sits
         int strips = 48;
         for (int i = 0; i < strips; i++) {

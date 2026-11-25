@@ -1,5 +1,6 @@
 package dev.flowerclient.integration;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import dev.flowerclient.FlowerClient;
@@ -24,6 +25,7 @@ import java.util.UUID;
  */
 public final class DiscordRPC {
     private static final long START_SECONDS = System.currentTimeMillis() / 1000L;
+    public static final String GET_FLOWER_URL = "https://github.com/grahamhacky/Flower-Client/releases";
 
     private volatile boolean running;
     private volatile boolean dirty;
@@ -141,6 +143,12 @@ public final class DiscordRPC {
         assets.addProperty("large_image", "flower");
         assets.addProperty("large_text", "Flower Client " + SharedConstants.getGameVersion().getName());
         activity.add("assets", assets);
+        JsonArray buttons = new JsonArray();
+        JsonObject get = new JsonObject();
+        get.addProperty("label", "Get Flower");
+        get.addProperty("url", GET_FLOWER_URL);
+        buttons.add(get);
+        activity.add("buttons", buttons);
         writeActivityFrame(activity);
     }
 

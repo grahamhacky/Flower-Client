@@ -6,6 +6,8 @@ const auth = require('./src/auth');
 const game = require('./src/game');
 const mods = require('./src/mods');
 const modrinth = require('./src/modrinth');
+let autoUpdater = null;
+try { autoUpdater = require('electron-updater').autoUpdater; } catch { /* dev without the dep */ }
 
 let win;
 
@@ -39,7 +41,7 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => { win.show(); setTimeout(initUpdater, 2500); });
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
     return { action: 'deny' };
@@ -79,6 +81,17 @@ handle('modrinth:search', (opts) => modrinth.search(store.load().gameDir, game.M
 handle('modrinth:installed', () => modrinth.installed(store.load().gameDir));
 handle('modrinth:install', (id) => modrinth.install(store.load().gameDir, game.MC_VERSION, id, (p) => send('modrinth:progress', p)));
 handle('modrinth:uninstall', (id) => modrinth.uninstall(store.load().gameDir, id));
+handle('cape:status', () => mods.capeStatus(store.load().gameDir));
+handle('cape:redeem', (code) => mods.redeemCape(store.load().gameDir, code));
+handle('cape:set', (wear) => mods.setCape(store.load().gameDir, wear));
+handle('bg:has', () => mods.hasBackground(store.load().gameDir));
+handle('bg:choose', async () => {
+  const r = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }] });
+  if (r.canceled || !r.filePaths[0]) return false;
+  mods.setBackground(store.load().gameDir, r.filePaths[0]);
+  return true;
+});
+handle('bg:clear', () => mods.clearBackground(store.load().gameDir));
 handle('discord:getAppId', () => mods.getDiscordAppId(store.load().gameDir));
 handle('discord:setAppId', (id) => mods.setDiscordAppId(store.load().gameDir, id));
 handle('app:info', () => ({ version: app.getVersion(), mc: game.MC_VERSION, flowerBundled: !!mods.findBundledFlowerJar(), platform: process.platform }));
@@ -87,6 +100,18 @@ handle('game:launch', () => game.launch((type, payload) => {
   if (type === 'state' && payload === 'running' && store.load().closeOnLaunch) setTimeout(() => app.quit(), 1500);
   send('game:' + type, payload);
 }));
+
+function initUpdater() {
+  if (!autoUpdater || !app.isPackaged) return;
+  autoUpdater.autoDownload = false;
+  autoUpdater.on('update-available', (info) => send('update:available', { version: info.version }));
+  autoUpdater.on('download-progress', (p) => send('update:progress', { percent: Math.round(p.percent || 0) }));
+  autoUpdater.on('update-downloaded', (info) => send('update:ready', { version: info.version }));
+  autoUpdater.on('error', (e) => send('update:error', String((e && e.message) || e)));
+  autoUpdater.checkForUpdates().catch(() => {});
+}
+handle('update:download', () => { if (autoUpdater) autoUpdater.downloadUpdate(); return true; });
+handle('update:install', () => { if (autoUpdater) autoUpdater.quitAndInstall(); return true; });
 
 ipcMain.on('window:minimize', () => win && win.minimize());
 ipcMain.on('window:maximize', () => win && (win.isMaximized() ? win.unmaximize() : win.maximize()));

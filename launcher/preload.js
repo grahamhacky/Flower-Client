@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('flower', {
   account: { get: () => call('account:get'), login: () => call('account:login'), logout: () => call('account:logout') },
   modules: { get: () => call('modules:get'), set: (n, e) => call('modules:set', n, e), performance: () => call('mods:performance') },
   app: { info: () => call('app:info') },
+  cape: { status: () => call('cape:status'), redeem: (c) => call('cape:redeem', c), set: (w) => call('cape:set', w) },
+  background: { has: () => call('bg:has'), choose: () => call('bg:choose'), clear: () => call('bg:clear') },
   discord: { getAppId: () => call('discord:getAppId'), setAppId: (id) => call('discord:setAppId', id) },
   modrinth: {
     search: (opts) => call('modrinth:search', opts),
@@ -31,6 +33,13 @@ contextBridge.exposeInMainWorld('flower', {
     onState: (cb) => on('game:state', cb),
     onLog: (cb) => on('game:log', cb),
     onError: (cb) => on('game:error', cb),
+  },
+  updater: {
+    download: () => call('update:download'),
+    install: () => call('update:install'),
+    onAvailable: (cb) => on('update:available', cb),
+    onProgress: (cb) => on('update:progress', cb),
+    onReady: (cb) => on('update:ready', cb),
   },
   window: {
     minimize: () => ipcRenderer.send('window:minimize'),

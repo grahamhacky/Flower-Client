@@ -1,0 +1,4 @@
+{
+  "_comment": "Players who own a Flower cape. Add Minecraft UUIDs (with dashes) mapped to a cape id. The only cape right now is \"flower\". Example: \"11111111-2222-3333-4444-555555555555\": \"flower\"",
+  "capes": {}
+}

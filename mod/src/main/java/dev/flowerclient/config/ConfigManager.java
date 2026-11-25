@@ -10,6 +10,7 @@ import dev.flowerclient.module.HudModule;
 import dev.flowerclient.module.Module;
 import dev.flowerclient.module.ModuleManager;
 import dev.flowerclient.module.SkyTime;
+import dev.flowerclient.render.CapeManager;
 import dev.flowerclient.module.impl.ZoomModule;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -28,6 +29,9 @@ public final class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject root = new JsonObject();
     private static final int LAYOUT = 2;
+    private static boolean capeUnlocked = false;
+    private static String cape = "flower";
+    private static String capesUrl = "https://raw.githubusercontent.com/grahamhacky/Flower-Client/main/capes.json";
     private static String discordAppId = "";
 
     private ConfigManager() {}
@@ -48,6 +52,9 @@ public final class ConfigManager {
             if (root.has("sky")) {
                 try { SkyTime.set(SkyTime.Mode.valueOf(root.get("sky").getAsString())); } catch (IllegalArgumentException ignored) {}
             }
+            if (root.has("capeUnlocked")) capeUnlocked = root.get("capeUnlocked").getAsBoolean();
+            if (root.has("cape")) cape = root.get("cape").getAsString();
+            if (root.has("capesUrl")) capesUrl = root.get("capesUrl").getAsString();
             for (Map.Entry<String, JsonElement> e : mods.entrySet()) {
                 Module m = ModuleManager.byName(e.getKey());
                 if (m == null || !e.getValue().isJsonObject()) continue;
@@ -67,6 +74,7 @@ public final class ConfigManager {
         } catch (Exception ex) {
             FlowerClient.LOG.error("Could not read {}, using defaults", f, ex);
         }
+        CapeManager.configure(capeUnlocked, cape, capesUrl);
     }
 
     public static synchronized void save() {
@@ -91,6 +99,9 @@ public final class ConfigManager {
         root.add("modules", mods);
         root.addProperty("layout", LAYOUT);
         root.addProperty("sky", SkyTime.mode().name());
+        root.addProperty("capeUnlocked", capeUnlocked);
+        root.addProperty("cape", cape);
+        root.addProperty("capesUrl", capesUrl);
         root.addProperty("discordAppId", discordAppId);
         root.addProperty("version", FlowerClient.VERSION);
         try {
