@@ -40,9 +40,13 @@ public class KeystrokesModule extends HudModule {
 
     private int tile(DrawContext ctx, int i, KeyBinding kb, int x, int y, int w, int h) {
         glow[i] += ((kb.isPressed() ? 1f : 0f) - glow[i]) * 0.4f;
-        Theme.panel(ctx, x, y, w, h, Theme.lerpColor(Theme.HUD_BG, Theme.hudAccent, glow[i]));
-        ctx.fill(x + 1, y, x + w - 1, y + 1, Theme.withAlpha(0xFFFFFFFF, 0.11f + 0.25f * glow[i]));
-        return glow[i] > 0.5f ? DARK : Theme.TEXT;
+        float g = glow[i];
+        Theme.shadow(ctx, x, y, w, h, 2);
+        int top = Theme.lerpColor(0xC8201A24, Theme.lerpColor(Theme.hudAccent, 0xFFFFFFFF, 0.22f), g);
+        int bot = Theme.lerpColor(0xC8100B16, Theme.hudAccent, g);
+        Theme.roundedGradient(ctx, x, y, w, h, 2, top, bot);
+        Theme.sheen(ctx, x, y, w, 2, Theme.withAlpha(0xFFFFFFFF, 0.12f + 0.28f * g));
+        return g > 0.5f ? DARK : Theme.TEXT;
     }
 
     private void key(DrawContext ctx, MinecraftClient mc, int i, KeyBinding kb, int x, int y, int w, int h, String label) {

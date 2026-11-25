@@ -29,22 +29,21 @@ public class FlowerButton extends ButtonWidget {
         float a = alpha;
         var tr = MinecraftClient.getInstance().textRenderer;
 
+        if (a > 0.02f) Theme.shadow(ctx, x, y, w, h, 3);
         if (style == Style.PRIMARY) {
-            int top = Theme.lerpColor(0xFFF08CB0, 0xFFF7B6CC, hover), bottom = Theme.lerpColor(0xFFE85D8A, 0xFFF08CB0, hover);
-            ctx.fillGradient(x + 1, y, x + w - 1, y + h, Theme.withAlpha(top, a), Theme.withAlpha(bottom, a));
-            ctx.fill(x, y + 1, x + 1, y + h - 1, Theme.withAlpha(bottom, a));
-            ctx.fill(x + w - 1, y + 1, x + w, y + h - 1, Theme.withAlpha(bottom, a));
-            ctx.fill(x + 1, y, x + w - 1, y + 1, Theme.withAlpha(0x66FFFFFF, a));
-            ctx.drawText(tr, getMessage(), x + 10, y + (h - 8) / 2, Theme.withAlpha(0xFF1A0A10, a), false);
+            int top = Theme.lerpColor(0xFFF08CB0, 0xFFF7C3D4, hover), bottom = Theme.lerpColor(0xFFE85D8A, 0xFFF08CB0, hover);
+            Theme.roundedGradient(ctx, x, y, w, h, 3, Theme.withAlpha(top, a), Theme.withAlpha(bottom, a));
+            Theme.sheen(ctx, x, y, w, 3, Theme.withAlpha(0x70FFFFFF, a));
+            ctx.drawText(tr, getMessage(), x + 11, y + (h - 8) / 2, Theme.withAlpha(0xFF1A0A10, a), false);
             return;
         }
 
-        int bg = Theme.lerpColor(0x22FFFFFF, 0x3CFFFFFF, hover);
-        Theme.panel(ctx, x, y, w, h, active ? Theme.withAlpha(bg, a) : Theme.withAlpha(0x14FFFFFF, a));
-        Theme.outline(ctx, x, y, w, h, Theme.withAlpha(Theme.lerpColor(0x26FFFFFF, 0x66F4A6C0, hover), a));
-        ctx.fill(x + 1, y + 1, x + w - 1, y + 2, Theme.withAlpha(0x12FFFFFF, a));
-        int bar = Math.round(2 + hover * 4);
-        if (style != Style.CENTER) ctx.fill(x + 3, y + (h - bar) / 2 - 2, x + 4, y + (h + bar) / 2 + 2, Theme.withAlpha(Theme.ACCENT, a * (0.35f + 0.65f * hover)));
+        int bgTop = Theme.lerpColor(0x24FFFFFF, 0x40FFFFFF, hover), bgBot = Theme.lerpColor(0x16FFFFFF, 0x28FFFFFF, hover);
+        Theme.roundedGradient(ctx, x, y, w, h, 3, Theme.withAlpha(active ? bgTop : 0x14FFFFFF, a), Theme.withAlpha(active ? bgBot : 0x0CFFFFFF, a));
+        Theme.roundedOutline(ctx, x, y, w, h, 3, Theme.withAlpha(Theme.lerpColor(0x26FFFFFF, 0x70F4A6C0, hover), a));
+        Theme.sheen(ctx, x, y, w, 3, Theme.withAlpha(0x14FFFFFF, a));
+        int bar = Math.round(3 + hover * 5);
+        if (style != Style.CENTER) Theme.roundedRect(ctx, x + 4, y + (h - bar) / 2, 2, bar, 1, Theme.withAlpha(Theme.ACCENT, a * (0.4f + 0.6f * hover)));
         int col = active ? Theme.lerpColor(0xFFE9E0E4, 0xFFFFFFFF, hover) : 0xFF8A8086;
         if (style == Style.CENTER) {
             int tw = tr.getWidth(getMessage());

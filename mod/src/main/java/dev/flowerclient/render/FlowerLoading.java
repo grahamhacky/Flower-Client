@@ -18,7 +18,7 @@ public final class FlowerLoading {
     public static void render(DrawContext ctx, int w, int h, float progress, String label, float alpha, long elapsedMs) {
         if (alpha <= 0.003f) return;
         int a = Math.round(alpha * 255);
-        ctx.fill(0, 0, w, h, a << 24 | BG);
+        ctx.fillGradient(0, 0, w, h, a << 24 | 0x120C14, a << 24 | BG);
 
         // soft glow behind the flower
         int cx = w / 2, cy = Math.round(h * 0.40f);

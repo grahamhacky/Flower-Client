@@ -78,9 +78,10 @@ public class FlowerScreen extends Screen {
         ctx.getMatrices().push();
         ctx.getMatrices().translate(0, slide, 0);
 
-        Theme.round(ctx, px, py, pw, ph, Theme.GLASS);
-        Theme.outline(ctx, px, py, pw, ph, Theme.GLASS_EDGE);
-        ctx.fill(px + 2, py + 1, px + pw - 2, py + 2, Theme.GLASS_SHINE);
+        Theme.shadow(ctx, px, py, pw, ph, 5);
+        Theme.roundedGradient(ctx, px, py, pw, ph, 5, Theme.GLASS_TOP, Theme.GLASS_BOT);
+        Theme.roundedOutline(ctx, px, py, pw, ph, 5, Theme.GLASS_EDGE);
+        Theme.sheen(ctx, px, py, pw, 5, Theme.GLASS_SHINE);
 
         // Header: wordmark + Edit HUD
         int hx = px + 10, hy = py + 11;
@@ -91,7 +92,9 @@ public class FlowerScreen extends Screen {
         String edit = "Edit HUD";
         int ew = tr.getWidth(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
         boolean eh = Theme.inside(mouseX, mouseY - slide, ex, ey, ew, 16);
-        Theme.panel(ctx, ex, ey, ew, 16, eh ? Theme.ACCENT : Theme.GLASS_HOVER);
+        if (eh) Theme.roundedGradient(ctx, ex, ey, ew, 16, 3, Theme.ACCENT_SOFT, Theme.ACCENT);
+        else Theme.roundedGradient(ctx, ex, ey, ew, 16, 3, Theme.GLASS_HOVER_TOP, Theme.GLASS_HOVER_BOT);
+        Theme.sheen(ctx, ex, ey, ew, 3, 0x22FFFFFF);
         ctx.drawText(tr, edit, ex + 7, ey + 4, eh ? 0xFF1A1418 : Theme.TEXT, false);
 
         ctx.fill(px + 1, py + HEADER - 1, px + pw - 1, py + HEADER, Theme.GLASS_TILE);
@@ -104,7 +107,7 @@ public class FlowerScreen extends Screen {
             boolean active = filter == c;
             boolean hov = Theme.inside(mouseX, mouseY - slide, tx - 2, ty - 2, w + 4, 13);
             ctx.drawText(tr, label, tx, ty, active ? Theme.TEXT : hov ? Theme.ACCENT_SOFT : Theme.MUTED, false);
-            if (active) ctx.fill(tx, ty + 10, tx + w, ty + 11, Theme.ACCENT_DEEP);
+            if (active) Theme.roundedRect(ctx, tx - 1, ty + 10, w + 2, 2, 1, Theme.ACCENT_DEEP);
             tx += w + 14;
         }
 
@@ -145,9 +148,11 @@ public class FlowerScreen extends Screen {
         a += ((m.isEnabled() ? 1f : 0f) - a) * 0.3f;
         anim.put(m, a);
 
-        Theme.panel(ctx, x, y, w, TILE_H, hover ? Theme.GLASS_HOVER : Theme.GLASS_TILE);
+        if (hover) Theme.roundedGradient(ctx, x, y, w, TILE_H, 3, Theme.GLASS_HOVER_TOP, Theme.GLASS_HOVER_BOT);
+        else Theme.roundedGradient(ctx, x, y, w, TILE_H, 3, Theme.GLASS_TILE_TOP, Theme.GLASS_TILE_BOT);
+        Theme.sheen(ctx, x, y, w, 3, 0x14FFFFFF);
         // left accent bar shows enabled state
-        ctx.fill(x, y + 4, x + 2, y + TILE_H - 4, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
+        Theme.roundedRect(ctx, x + 2, y + 4, 2, TILE_H - 8, 1, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
 
         ctx.drawText(tr, m.getName(), x + 8, y + 7, Theme.TEXT, false);
         ctx.getMatrices().push();
@@ -157,10 +162,11 @@ public class FlowerScreen extends Screen {
         ctx.getMatrices().pop();
 
         // toggle pill
-        int sw = 18, sh = 9, sx = x + w - sw - 7, sy = y + 6;
-        Theme.panel(ctx, sx, sy, sw, sh, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
+        int sw = 18, sh = 10, sx = x + w - sw - 7, sy = y + 6;
+        Theme.roundedRect(ctx, sx, sy, sw, sh, sh / 2, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
+        if (a > 0.5f) Theme.sheen(ctx, sx, sy, sw, sh / 2, 0x33FFFFFF);
         int knob = sx + 1 + Math.round(a * (sw - 9));
-        Theme.panel(ctx, knob, sy + 1, 7, 7, Theme.lerpColor(Theme.MUTED, Theme.TEXT, a));
+        Theme.roundedRect(ctx, knob, sy + 1, 8, 8, 4, Theme.lerpColor(0xFFBBB0B6, 0xFFFFFFFF, a));
     }
 
     private Category[] tabs() { return new Category[]{null, Category.HUD, Category.UTILITY}; }
