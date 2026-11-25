@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../node_modules/@fontsource/jetbrains-mono/500.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="intro">
+<body class="intro locked">
   <canvas id="bloom" aria-hidden="true"></canvas>
   <div class="grain" aria-hidden="true"></div>
   <div class="intro-caption mono" aria-hidden="true"><span>flower</span><span class="dim">client</span></div>
@@ -180,6 +180,30 @@
       <pre class="log mono" id="log"></pre>
     </section>
   </main>
+
+  <div class="gate" id="gate" hidden>
+    <div class="gate-aura"></div>
+    <div class="gate-petals" id="gate-petals"></div>
+    <div class="gate-card" id="gate-card">
+      <div class="gate-mark">✿</div>
+      <h1 class="gate-title"><em>Flower</em></h1>
+      <p class="gate-sub" id="gate-sub">Enter your license key to unlock the client.</p>
+      <form class="gate-form" id="gate-form" autocomplete="off">
+        <div class="gate-input" id="gate-input-wrap">
+          <input id="gate-key" type="text" spellcheck="false" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" aria-label="License key" />
+          <div class="gate-ring"></div>
+        </div>
+        <button class="gate-btn" id="gate-btn" type="submit">
+          <span class="gate-btn-label">Unlock</span>
+          <span class="gate-spinner" aria-hidden="true"></span>
+          <span class="gate-check" aria-hidden="true"></span>
+        </button>
+      </form>
+      <p class="gate-msg" id="gate-msg"></p>
+      <a class="gate-link" id="gate-getkey" href="#">Need a key?</a>
+    </div>
+    <div class="gate-foot mono" id="gate-foot">Flower Client</div>
+  </div>
 
   <div class="modal-scrim" id="consent" hidden>
     <div class="modal">
