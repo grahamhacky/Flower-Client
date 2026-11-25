@@ -26,7 +26,7 @@ public class FlowerButton extends ButtonWidget {
         boolean on = active && (isHovered() || isFocused());
         hover += ((on ? 1f : 0f) - hover) * 0.3f;
         int x = getX(), y = getY(), w = getWidth(), h = getHeight();
-        Text label = getMessage().copy().styled(st -> st.withFont(Theme.FONT));
+        Text label = getMessage();
         float a = alpha;
         var tr = MinecraftClient.getInstance().textRenderer;
 

@@ -6,6 +6,7 @@ import dev.flowerclient.module.Category;
 import dev.flowerclient.module.Module;
 import dev.flowerclient.module.ModuleManager;
 import dev.flowerclient.render.FlowerArt;
+import dev.flowerclient.render.FlowerTextures;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -81,25 +82,23 @@ public class FlowerScreen extends Screen {
 
         Theme.shadow(ctx, px, py, pw, ph, 5);
         Theme.roundedGradient(ctx, px, py, pw, ph, 5, Theme.GLASS_TOP, Theme.GLASS_BOT);
-        // faint ASCII bloom watermark in the lower-right of the panel
+        // launcher-style ASCII bloom glowing in the header, behind the Edit HUD chip
         ctx.enableScissor(px + 1, py + 1, px + pw - 1, py + ph - 1);
         float bt = (System.currentTimeMillis() - openedAt) / 1000f;
-        FlowerArt.draw(ctx, px + pw - 42, py + ph - 30, 30, 1, bt, Math.min(1f, bt / 3f), 0.10f);
+        float bcx = px + pw - 30, bcy = py + 18;
+        for (int gi = 5; gi >= 1; gi--) {
+            int gr = Math.round(22 * (0.5f + gi * 0.3f));
+            disc(ctx, Math.round(bcx), Math.round(bcy), gr, 0x0EE85D8A);
+        }
+        FlowerArt.draw(ctx, bcx, bcy, 22, 1, bt, Math.min(1f, bt / 2.2f), 0.5f);
         ctx.disableScissor();
         Theme.roundedOutline(ctx, px, py, pw, ph, 5, Theme.GLASS_EDGE);
         Theme.sheen(ctx, px, py, pw, 5, Theme.GLASS_SHINE);
-        // terminal-style corner brackets
-        Theme.text(ctx, "+", px + 3, py + 2, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
-        Theme.text(ctx, "+", px + pw - 8, py + 2, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
-        Theme.text(ctx, "+", px + 3, py + ph - 9, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
-        Theme.text(ctx, "+", px + pw - 8, py + ph - 9, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
 
-        // Header: wordmark + Edit HUD
-        int hx = px + 10, hy = py + 11;
-        Theme.text(ctx, "✿", hx, hy, Theme.ACCENT_DEEP, false);
-        int wmx = hx + 11;
-        wmx += Theme.text(ctx, "flower", wmx, hy, Theme.TEXT, false) - wmx + 1;
-        Theme.text(ctx, "/client", wmx, hy, Theme.MUTED, false);
+        // Header: the Flower wordmark (same script as the launcher) + a 'client' tag
+        int hx = px + 11, hy = py + 9;
+        FlowerTextures.wordmarkLeft(ctx, hx, hy + 6, 56, 1f);
+        ctx.drawText(tr, "client", hx + 60, hy + 2, Theme.MUTED, false);
 
         String edit = "Edit HUD";
         int ew = Theme.width(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
@@ -152,6 +151,13 @@ public class FlowerScreen extends Screen {
         Theme.text(ctx, foot, px + 10, py + ph - FOOTER + 2, Theme.MUTED, false);
 
         ctx.getMatrices().pop();
+    }
+
+    private static void disc(DrawContext ctx, int cx, int cy, int r, int argb) {
+        for (int dy = -r; dy < r; dy += 2) {
+            int half = (int) Math.sqrt(Math.max(0, r * r - (dy + 1) * (dy + 1)));
+            ctx.fill(cx - half, cy + dy, cx + half, cy + dy + 2, argb);
+        }
     }
 
     private void drawTile(DrawContext ctx, Module m, int x, int y, int w, boolean hover) {
