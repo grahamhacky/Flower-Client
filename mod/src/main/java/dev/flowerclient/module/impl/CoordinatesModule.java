@@ -33,7 +33,7 @@ public class CoordinatesModule extends HudModule {
     @Override public int width(MinecraftClient mc) {
         if (mc.player == null) return 60;
         int w = 0;
-        for (String s : lines(mc)) w = Math.max(w, mc.textRenderer.getWidth(s));
+        for (String s : lines(mc)) w = Math.max(w, Theme.width(s));
         return w + PAD * 2 + 1;
     }
     @Override public int height(MinecraftClient mc) { return 4 * 10 + PAD * 2 - 1; }
@@ -45,10 +45,10 @@ public class CoordinatesModule extends HudModule {
         for (int i = 0; i < l.length; i++) {
             int y = PAD + i * 10;
             if (i < 3) {
-                ctx.drawText(mc.textRenderer, l[i].substring(0, 1), PAD + 1, y, Theme.hudAccent, !background);
-                ctx.drawText(mc.textRenderer, l[i].substring(2), PAD + 11, y, Theme.TEXT, !background);
+                Theme.text(ctx, l[i].substring(0, 1), PAD + 1, y, Theme.hudAccent, !background);
+                Theme.text(ctx, l[i].substring(2), PAD + 11, y, Theme.TEXT, !background);
             } else {
-                ctx.drawText(mc.textRenderer, l[i], PAD + 1, y + 1, Theme.MUTED, !background);
+                Theme.text(ctx, l[i], PAD + 1, y + 1, Theme.MUTED, !background);
             }
         }
     }

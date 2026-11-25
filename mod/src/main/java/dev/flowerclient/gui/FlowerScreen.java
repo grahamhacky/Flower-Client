@@ -5,6 +5,7 @@ import dev.flowerclient.config.ConfigManager;
 import dev.flowerclient.module.Category;
 import dev.flowerclient.module.Module;
 import dev.flowerclient.module.ModuleManager;
+import dev.flowerclient.render.FlowerArt;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -80,22 +81,33 @@ public class FlowerScreen extends Screen {
 
         Theme.shadow(ctx, px, py, pw, ph, 5);
         Theme.roundedGradient(ctx, px, py, pw, ph, 5, Theme.GLASS_TOP, Theme.GLASS_BOT);
+        // faint ASCII bloom watermark in the lower-right of the panel
+        ctx.enableScissor(px + 1, py + 1, px + pw - 1, py + ph - 1);
+        float bt = (System.currentTimeMillis() - openedAt) / 1000f;
+        FlowerArt.draw(ctx, px + pw - 42, py + ph - 30, 30, 1, bt, Math.min(1f, bt / 3f), 0.10f);
+        ctx.disableScissor();
         Theme.roundedOutline(ctx, px, py, pw, ph, 5, Theme.GLASS_EDGE);
         Theme.sheen(ctx, px, py, pw, 5, Theme.GLASS_SHINE);
+        // terminal-style corner brackets
+        Theme.text(ctx, "+", px + 3, py + 2, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
+        Theme.text(ctx, "+", px + pw - 8, py + 2, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
+        Theme.text(ctx, "+", px + 3, py + ph - 9, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
+        Theme.text(ctx, "+", px + pw - 8, py + ph - 9, Theme.withAlpha(Theme.ACCENT, 0.5f), false);
 
         // Header: wordmark + Edit HUD
         int hx = px + 10, hy = py + 11;
-        ctx.drawText(tr, "✿", hx, hy, Theme.ACCENT_DEEP, false);
-        ctx.drawText(tr, "Flower", hx + 11, hy, Theme.TEXT, false);
-        ctx.drawText(tr, "client", hx + 11 + tr.getWidth("Flower "), hy, Theme.MUTED, false);
+        Theme.text(ctx, "✿", hx, hy, Theme.ACCENT_DEEP, false);
+        int wmx = hx + 11;
+        wmx += Theme.text(ctx, "flower", wmx, hy, Theme.TEXT, false) - wmx + 1;
+        Theme.text(ctx, "/client", wmx, hy, Theme.MUTED, false);
 
         String edit = "Edit HUD";
-        int ew = tr.getWidth(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
+        int ew = Theme.width(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
         boolean eh = Theme.inside(mouseX, mouseY - slide, ex, ey, ew, 16);
         if (eh) Theme.roundedGradient(ctx, ex, ey, ew, 16, 3, Theme.ACCENT_SOFT, Theme.ACCENT);
         else Theme.roundedGradient(ctx, ex, ey, ew, 16, 3, Theme.GLASS_HOVER_TOP, Theme.GLASS_HOVER_BOT);
         Theme.sheen(ctx, ex, ey, ew, 3, 0x22FFFFFF);
-        ctx.drawText(tr, edit, ex + 7, ey + 4, eh ? 0xFF1A1418 : Theme.TEXT, false);
+        Theme.text(ctx, edit, ex + 7, ey + 4, eh ? 0xFF1A1418 : Theme.TEXT, false);
 
         ctx.fill(px + 1, py + HEADER - 1, px + pw - 1, py + HEADER, Theme.GLASS_TILE);
 
@@ -103,10 +115,10 @@ public class FlowerScreen extends Screen {
         int tx = px + 10, ty = py + HEADER + 5;
         for (Category c : tabs()) {
             String label = c == null ? "All" : c.label;
-            int w = tr.getWidth(label);
+            int w = Theme.width(label);
             boolean active = filter == c;
             boolean hov = Theme.inside(mouseX, mouseY - slide, tx - 2, ty - 2, w + 4, 13);
-            ctx.drawText(tr, label, tx, ty, active ? Theme.TEXT : hov ? Theme.ACCENT_SOFT : Theme.MUTED, false);
+            Theme.text(ctx, label, tx, ty, active ? Theme.TEXT : hov ? Theme.ACCENT_SOFT : Theme.MUTED, false);
             if (active) Theme.roundedRect(ctx, tx - 1, ty + 10, w + 2, 2, 1, Theme.ACCENT_DEEP);
             tx += w + 14;
         }
@@ -136,8 +148,8 @@ public class FlowerScreen extends Screen {
         }
 
         // Footer
-        String foot = "Right Shift to close  ·  " + FlowerClient.NAME + " " + FlowerClient.VERSION;
-        ctx.drawText(tr, foot, px + 10, py + ph - FOOTER + 2, Theme.MUTED, false);
+        String foot = "» right shift to close  ·  flower client v" + FlowerClient.VERSION;
+        Theme.text(ctx, foot, px + 10, py + ph - FOOTER + 2, Theme.MUTED, false);
 
         ctx.getMatrices().pop();
     }
@@ -154,7 +166,7 @@ public class FlowerScreen extends Screen {
         // left accent bar shows enabled state
         Theme.roundedRect(ctx, x + 2, y + 4, 2, TILE_H - 8, 1, Theme.lerpColor(Theme.GLASS_OFF, Theme.ACCENT_DEEP, a));
 
-        ctx.drawText(tr, m.getName(), x + 8, y + 7, Theme.TEXT, false);
+        Theme.text(ctx, m.getName(), x + 8, y + 7, Theme.TEXT, false);
         ctx.getMatrices().push();
         ctx.getMatrices().translate(x + 8, y + 21, 0);
         ctx.getMatrices().scale(0.75f, 0.75f, 1f);
@@ -176,14 +188,14 @@ public class FlowerScreen extends Screen {
         int slide = 0;
         TextRenderer tr = textRenderer;
         String edit = "Edit HUD";
-        int ew = tr.getWidth(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
+        int ew = Theme.width(edit) + 14, ex = px + pw - ew - 8, ey = py + 7;
         if (button == 0 && Theme.inside(mx, my, ex, ey, ew, 16)) {
             client.setScreen(new HudEditorScreen(this));
             return true;
         }
         int tx = px + 10, ty = py + HEADER + 5;
         for (Category c : tabs()) {
-            int w = tr.getWidth(c == null ? "All" : c.label);
+            int w = Theme.width(c == null ? "All" : c.label);
             if (Theme.inside(mx, my, tx - 2, ty - 2, w + 4, 13)) {
                 filter = c;
                 scroll = scrollTarget = 0;

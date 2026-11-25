@@ -26,6 +26,7 @@ public class FlowerButton extends ButtonWidget {
         boolean on = active && (isHovered() || isFocused());
         hover += ((on ? 1f : 0f) - hover) * 0.3f;
         int x = getX(), y = getY(), w = getWidth(), h = getHeight();
+        Text label = getMessage().copy().styled(st -> st.withFont(Theme.FONT));
         float a = alpha;
         var tr = MinecraftClient.getInstance().textRenderer;
 
@@ -34,7 +35,7 @@ public class FlowerButton extends ButtonWidget {
             int top = Theme.lerpColor(0xFFF08CB0, 0xFFF7C3D4, hover), bottom = Theme.lerpColor(0xFFE85D8A, 0xFFF08CB0, hover);
             Theme.roundedGradient(ctx, x, y, w, h, 3, Theme.withAlpha(top, a), Theme.withAlpha(bottom, a));
             Theme.sheen(ctx, x, y, w, 3, Theme.withAlpha(0x70FFFFFF, a));
-            ctx.drawText(tr, getMessage(), x + 11, y + (h - 8) / 2, Theme.withAlpha(0xFF1A0A10, a), false);
+            ctx.drawText(tr, label, x + 11, y + (h - 8) / 2, Theme.withAlpha(0xFF1A0A10, a), false);
             return;
         }
 
@@ -46,10 +47,10 @@ public class FlowerButton extends ButtonWidget {
         if (style != Style.CENTER) Theme.roundedRect(ctx, x + 4, y + (h - bar) / 2, 2, bar, 1, Theme.withAlpha(Theme.ACCENT, a * (0.4f + 0.6f * hover)));
         int col = active ? Theme.lerpColor(0xFFE9E0E4, 0xFFFFFFFF, hover) : 0xFF8A8086;
         if (style == Style.CENTER) {
-            int tw = tr.getWidth(getMessage());
-            ctx.drawText(tr, getMessage(), x + (w - tw) / 2, y + (h - 8) / 2, Theme.withAlpha(col, a), false);
+            int tw = tr.getWidth(label);
+            ctx.drawText(tr, label, x + (w - tw) / 2, y + (h - 8) / 2, Theme.withAlpha(col, a), false);
         } else {
-            ctx.drawText(tr, getMessage(), x + 10 + Math.round(hover * 2), y + (h - 8) / 2, Theme.withAlpha(col, a), false);
+            ctx.drawText(tr, label, x + 10 + Math.round(hover * 2), y + (h - 8) / 2, Theme.withAlpha(col, a), false);
         }
     }
 }

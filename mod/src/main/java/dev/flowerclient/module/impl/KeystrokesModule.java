@@ -51,14 +51,14 @@ public class KeystrokesModule extends HudModule {
 
     private void key(DrawContext ctx, MinecraftClient mc, int i, KeyBinding kb, int x, int y, int w, int h, String label) {
         int col = tile(ctx, i, kb, x, y, w, h);
-        int tw = mc.textRenderer.getWidth(label);
-        ctx.drawText(mc.textRenderer, label, x + (w - tw) / 2 + 1, y + (h - 8) / 2 + 1, col, false);
+        int tw = Theme.width(label);
+        Theme.text(ctx, label, x + (w - tw) / 2 + 1, y + (h - 8) / 2 + 1, col, false);
     }
 
     private void mouse(DrawContext ctx, MinecraftClient mc, int i, KeyBinding kb, int x, int y, int w, int cps, String label) {
         int col = tile(ctx, i, kb, x, y, w, M);
         String text = cps > 0 ? cps + " cps" : label;
-        int tw = mc.textRenderer.getWidth(text);
-        ctx.drawText(mc.textRenderer, text, x + (w - tw) / 2 + 1, y + (M - 8) / 2 + 1, col, false);
+        int tw = Theme.width(text);
+        Theme.text(ctx, text, x + (w - tw) / 2 + 1, y + (M - 8) / 2 + 1, col, false);
     }
 }

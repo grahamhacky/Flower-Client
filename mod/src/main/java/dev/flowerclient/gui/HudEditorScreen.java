@@ -74,11 +74,11 @@ public class HudEditorScreen extends Screen {
         }
 
         String hint = "Drag to move  ·  Scroll to resize  ·  Right-click: background  ·  Esc to save";
-        int hw = textRenderer.getWidth(hint) + 16;
+        int hw = Theme.width(hint) + 16;
         int hx = (width - hw) / 2, hy = height - 26;
         Theme.panel(ctx, hx, hy, hw, 16, 0xB0141015);
         Theme.outline(ctx, hx, hy, hw, 16, Theme.GLASS_EDGE);
-        ctx.drawText(textRenderer, hint, hx + 8, hy + 4, Theme.MUTED, false);
+        Theme.text(ctx, hint, hx + 8, hy + 4, Theme.MUTED, false);
     }
 
     @Override

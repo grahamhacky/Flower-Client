@@ -39,8 +39,8 @@ public class PotionEffectsModule extends HudModule {
     }
 
     @Override public int width(MinecraftClient mc) {
-        int w = mc.textRenderer.getWidth("Speed II  0:00");
-        for (String[] r : rows(mc)) w = Math.max(w, mc.textRenderer.getWidth(r[0] + "  " + r[1]));
+        int w = Theme.width("Speed II  0:00");
+        for (String[] r : rows(mc)) w = Math.max(w, Theme.width(r[0] + "  " + r[1]));
         return w + PAD * 2;
     }
 
@@ -49,12 +49,12 @@ public class PotionEffectsModule extends HudModule {
     @Override
     public void render(DrawContext ctx, MinecraftClient mc) {
         List<String[]> r = rows(mc);
-        if (r.isEmpty()) { ctx.drawText(mc.textRenderer, "No effects", PAD + 1, PAD, Theme.MUTED, !background); return; }
+        if (r.isEmpty()) { Theme.text(ctx, "No effects", PAD + 1, PAD, Theme.MUTED, !background); return; }
         int w = width(mc);
         for (int i = 0; i < r.size(); i++) {
             int y = PAD + i * 10;
-            ctx.drawText(mc.textRenderer, r.get(i)[0], PAD + 1, y, Theme.TEXT, !background);
-            ctx.drawText(mc.textRenderer, r.get(i)[1], w - PAD - mc.textRenderer.getWidth(r.get(i)[1]), y, Theme.hudAccent, !background);
+            Theme.text(ctx, r.get(i)[0], PAD + 1, y, Theme.TEXT, !background);
+            Theme.text(ctx, r.get(i)[1], w - PAD - Theme.width(r.get(i)[1]), y, Theme.hudAccent, !background);
         }
     }
 }

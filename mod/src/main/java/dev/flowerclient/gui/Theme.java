@@ -1,6 +1,9 @@
 package dev.flowerclient.gui;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 /**
  * Shared colours and drawing helpers for Flower's in-game UI. Everything is built from solid
@@ -41,6 +44,17 @@ public final class Theme {
 
     /** HUD accent. Biome Tint changes this every tick; otherwise it stays the blush pink. */
     public static int hudAccent = ACCENT;
+
+    /** The launcher's JetBrains Mono, falling back to the vanilla font for missing glyphs. */
+    public static final Identifier FONT = Identifier.of("flowerclient", "flower");
+
+    public static Text mono(String s) { return Text.literal(s).styled(st -> st.withFont(FONT)); }
+
+    public static int text(DrawContext ctx, String s, int x, int y, int color, boolean shadow) {
+        return ctx.drawText(MinecraftClient.getInstance().textRenderer, mono(s), x, y, color, shadow);
+    }
+
+    public static int width(String s) { return MinecraftClient.getInstance().textRenderer.getWidth(mono(s)); }
 
     private Theme() {}
 

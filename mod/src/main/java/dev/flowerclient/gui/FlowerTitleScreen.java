@@ -90,11 +90,11 @@ public class FlowerTitleScreen extends Screen {
 
         FlowerTextures.wordmarkLeft(ctx, x - 3, top - 50, 150, fade);
         String chips = SharedConstants.getGameVersion().getName() + "  ·  Fabric  ·  PvP";
-        ctx.drawText(textRenderer, chips, x, top - 14, Theme.withAlpha(Theme.MUTED, fade), false);
+        ctx.drawText(textRenderer, Theme.mono(chips), x, top - 14, Theme.withAlpha(Theme.MUTED, fade), false);
 
         String left = FlowerClient.NAME + " " + FlowerClient.VERSION;
-        ctx.drawText(textRenderer, left, 6, height - 12, Theme.withAlpha(0xFF6E646A, fade), false);
+        ctx.drawText(textRenderer, Theme.mono(left), 6, height - 12, Theme.withAlpha(0xFF6E646A, fade), false);
         String right = "Copyright Mojang AB. Do not distribute!";
-        ctx.drawText(textRenderer, right, width - textRenderer.getWidth(right) - 6, height - 12, Theme.withAlpha(0xFF6E646A, fade), false);
+        ctx.drawText(textRenderer, Theme.mono(right), width - textRenderer.getWidth(Theme.mono(right)) - 6, height - 12, Theme.withAlpha(0xFF6E646A, fade), false);
     }
 }

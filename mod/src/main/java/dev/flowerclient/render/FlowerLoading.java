@@ -49,8 +49,8 @@ public final class FlowerLoading {
         if (label != null && !label.isEmpty()) {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.textRenderer != null) {
-                int tw = mc.textRenderer.getWidth(label);
-                ctx.drawText(mc.textRenderer, label, cx - tw / 2, by + 8, Math.round(alpha * 255) << 24 | (Theme.MUTED & 0xFFFFFF), false);
+                int tw = mc.textRenderer.getWidth(Theme.mono(label));
+                ctx.drawText(mc.textRenderer, Theme.mono(label), cx - tw / 2, by + 8, Math.round(alpha * 255) << 24 | (Theme.MUTED & 0xFFFFFF), false);
             }
         }
     }
