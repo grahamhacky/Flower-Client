@@ -15,7 +15,12 @@ const AUTH_ERRORS = {
   'error.auth.minecraft.profile': 'This account does not own Minecraft: Java Edition.',
 };
 const friendly = (e) => {
-  const msg = typeof e === 'string' ? e : (e && e.message) || String(e);
+  let msg;
+  if (typeof e === 'string') msg = e;
+  else if (e && e.message) msg = e.message;
+  else if (e && e.ts) msg = e.ts;
+  else { try { msg = JSON.stringify(e); } catch { msg = String(e); } }
+  console.error('[flower]', e);
   return AUTH_ERRORS[msg] || msg;
 };
 
