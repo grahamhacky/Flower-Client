@@ -1,0 +1,9 @@
+node_modules/
+launcher/dist/
+launcher/resources/mods/*.jar
+mod/build/
+mod/.gradle/
+mod/run/
+.idea/
+*.iml
+.DS_Store

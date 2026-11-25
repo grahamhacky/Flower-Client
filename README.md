@@ -29,7 +29,7 @@ A PvP client for Minecraft **1.21.1** in the spirit of Feather and Dawn. It has 
 ## Getting an installer (easiest)
 
 1. Push this folder to a GitHub repo.
-2. GitHub Actions (`.github/workflows/build.yml`) builds the mod jar, puts it inside the launcher and makes a Windows installer.
+2. GitHub Actions (`.github/workflows/main.yml`) builds the mod jar, puts it inside the launcher and makes a Windows installer.
 3. Open the **Actions** tab → latest run → download **FlowerClient-Setup**.
    If you push a tag like `v1.0.0`, the installer and mod jar are also attached to a GitHub Release.
 
