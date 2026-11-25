@@ -17,6 +17,13 @@ contextBridge.exposeInMainWorld('flower', {
   account: { get: () => call('account:get'), login: () => call('account:login'), logout: () => call('account:logout') },
   modules: { get: () => call('modules:get'), set: (n, e) => call('modules:set', n, e), performance: () => call('mods:performance') },
   app: { info: () => call('app:info') },
+  modrinth: {
+    search: (opts) => call('modrinth:search', opts),
+    installed: () => call('modrinth:installed'),
+    install: (id) => call('modrinth:install', id),
+    uninstall: (id) => call('modrinth:uninstall', id),
+    onProgress: (cb) => on('modrinth:progress', cb),
+  },
   game: {
     launch: () => call('game:launch'),
     onProgress: (cb) => on('game:progress', cb),

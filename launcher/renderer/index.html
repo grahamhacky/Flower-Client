@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://mc-heads.net; connect-src 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://mc-heads.net https://cdn.modrinth.com; connect-src 'self'" />
   <title>Flower Client</title>
   <link rel="stylesheet" href="../node_modules/@fontsource/instrument-serif/400.css" />
   <link rel="stylesheet" href="../node_modules/@fontsource/instrument-serif/400-italic.css" />
@@ -32,6 +32,9 @@
     </button>
     <button class="nav" data-page="mods" title="Mods">
       <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><circle cx="16.5" cy="16.5" r="3.5"/></svg><span>Mods</span>
+    </button>
+    <button class="nav" data-page="browse" title="Browse Modrinth">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span>Modrinth</span>
     </button>
     <button class="nav" data-page="settings" title="Settings">
       <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Settings</span>
@@ -77,6 +80,31 @@
       <div class="rows" id="module-list"></div>
       <h3 class="group mono">Performance <span>from Modrinth</span></h3>
       <div class="rows" id="perf-list"></div>
+    </section>
+
+    <!-- MODRINTH -->
+    <section class="page" id="page-browse">
+      <div class="page-head row">
+        <div><h2>Modrinth</h2><p>Fabric mods for <span class="mono" id="mr-version">1.21.1</span>. Required dependencies install automatically.</p></div>
+        <div class="seg" id="mr-view" role="tablist">
+          <button type="button" role="tab" aria-checked="true" data-view="search">Discover</button>
+          <button type="button" role="tab" aria-checked="false" data-view="installed">Installed <span id="mr-count"></span></button>
+        </div>
+      </div>
+      <div class="mr-bar" id="mr-bar">
+        <label class="mr-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+          <input type="search" id="mr-q" placeholder="Search mods — e.g. minimap, shaders, sounds" spellcheck="false" autocomplete="off" />
+        </label>
+        <div class="seg small" id="mr-sort">
+          <button type="button" aria-checked="true" data-sort="relevance">Relevance</button>
+          <button type="button" aria-checked="false" data-sort="downloads">Popular</button>
+          <button type="button" aria-checked="false" data-sort="updated">Updated</button>
+          <button type="button" aria-checked="false" data-sort="newest">New</button>
+        </div>
+      </div>
+      <div class="mr-list" id="mr-list"></div>
+      <div class="mr-foot"><button class="ghost" id="mr-more" hidden>Load more</button><p class="mono" id="mr-status"></p></div>
     </section>
 
     <!-- SETTINGS -->

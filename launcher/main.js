@@ -5,6 +5,7 @@ const store = require('./src/store');
 const auth = require('./src/auth');
 const game = require('./src/game');
 const mods = require('./src/mods');
+const modrinth = require('./src/modrinth');
 
 let win;
 
@@ -72,6 +73,10 @@ handle('account:logout', () => auth.logout());
 handle('modules:get', () => mods.readModules(store.load().gameDir));
 handle('modules:set', (name, enabled) => mods.setModule(store.load().gameDir, name, enabled));
 handle('mods:performance', () => mods.PERFORMANCE);
+handle('modrinth:search', (opts) => modrinth.search(store.load().gameDir, game.MC_VERSION, opts || {}));
+handle('modrinth:installed', () => modrinth.installed(store.load().gameDir));
+handle('modrinth:install', (id) => modrinth.install(store.load().gameDir, game.MC_VERSION, id, (p) => send('modrinth:progress', p)));
+handle('modrinth:uninstall', (id) => modrinth.uninstall(store.load().gameDir, id));
 handle('app:info', () => ({ version: app.getVersion(), mc: game.MC_VERSION, flowerBundled: !!mods.findBundledFlowerJar(), platform: process.platform }));
 
 handle('game:launch', () => game.launch((type, payload) => {

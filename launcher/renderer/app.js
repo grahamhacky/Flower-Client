@@ -9,7 +9,7 @@ const state = { settings: null, account: null, modules: [], perf: {}, info: null
 const bloom = new window.FlowerBloom($('#bloom'));
 
 /* ---------------- placement of the flower per page ---------------- */
-const ANCHORS = { home: [0.7, 0.42, 0.22], mods: [0.66, 0.4, 0.26], settings: [0.66, 0.4, 0.26], log: [0.7, 0.4, 0.24] };
+const ANCHORS = { browse: [0.66, 0.4, 0.26], home: [0.7, 0.42, 0.22], mods: [0.66, 0.4, 0.26], settings: [0.66, 0.4, 0.26], log: [0.7, 0.4, 0.24] };
 function placeFlower(page, dur) {
   const [x, y, s] = ANCHORS[page] || ANCHORS.home;
   bloom.moveTo(x, y, s, dur);
@@ -27,6 +27,7 @@ function toast(msg, kind = 'info', ms = 5200) {
 /* ---------------- navigation ---------------- */
 function go(page) {
   state.page = page;
+  if (page === 'browse' && !mr.loaded && !mr.reqId) mrLoad(true);
   $$('.nav').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
   $$('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-' + page));
   placeFlower(page, 900);
@@ -182,6 +183,131 @@ function renderMods() {
   });
 }
 
+/* ---------------- modrinth ---------------- */
+const mr = { view: 'search', sort: 'relevance', q: '', offset: 0, total: 0, hits: [], busy: new Map(), installed: {}, loaded: false, reqId: 0 };
+
+function fmtNum(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + 'K';
+  return String(n);
+}
+
+function mrIcon(url, title) {
+  return url
+    ? `<img class="mr-icon" alt="" loading="lazy" src="${esc(url)}" />`
+    : `<div class="mr-icon ph">${esc((title || '?').trim().charAt(0).toUpperCase())}</div>`;
+}
+
+function mrButton(id, installedNow, managed) {
+  if (managed) return `<span class="mr-tag">Managed in Mods</span>`;
+  const b = mr.busy.get(id);
+  if (b) return `<button class="mr-btn busy" disabled><i style="--p:${Math.round((b.pct || 0) * 100)}%"></i>${b.label}</button>`;
+  return installedNow
+    ? `<button class="mr-btn done" data-remove="${esc(id)}"><span class="a">Installed</span><span class="b">Remove</span></button>`
+    : `<button class="mr-btn" data-install="${esc(id)}">Install</button>`;
+}
+
+function renderModrinth() {
+  const list = $('#mr-list');
+  $('#mr-count').textContent = Object.keys(mr.installed).length || '';
+  $('#mr-bar').hidden = mr.view !== 'search';
+  $$('#mr-view button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.view === mr.view)));
+  $$('#mr-sort button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.sort === mr.sort)));
+
+  if (mr.view === 'installed') {
+    const entries = Object.entries(mr.installed);
+    $('#mr-more').hidden = true;
+    $('#mr-status').textContent = entries.length ? 'Changes apply next time you press Play.' : '';
+    list.innerHTML = entries.length
+      ? entries.map(([id, e]) => `<div class="mr-item">${mrIcon(e.icon, e.title)}<div class="mr-text"><div class="mr-title">${esc(e.title)}<span class="mr-by mono">${esc(e.version || '')}</span></div><div class="mr-desc">${e.dependency ? 'Installed as a dependency' : esc(e.filename)}</div></div>${mrButton(id, true, false)}</div>`).join('')
+      : `<div class="mr-empty"><b>Nothing installed from Modrinth yet.</b><span>Find something in Discover.</span></div>`;
+    return;
+  }
+  list.innerHTML = mr.hits.length
+    ? mr.hits.map((h) => `<div class="mr-item">${mrIcon(h.icon, h.title)}<div class="mr-text"><div class="mr-title">${esc(h.title)}<span class="mr-by">by ${esc(h.author)}</span></div><div class="mr-desc">${esc(h.description)}</div><div class="mr-meta mono"><span>↓ ${fmtNum(h.downloads)}</span><span>♥ ${fmtNum(h.follows)}</span>${h.categories.map((c) => `<span class="mr-cat">${esc(c)}</span>`).join('')}</div></div>${mrButton(h.id, !!mr.installed[h.id], h.managed)}</div>`).join('')
+    : mr.loaded ? `<div class="mr-empty"><b>No mods found.</b><span>Try a different search.</span></div>` : skeletonRows();
+  $('#mr-more').hidden = mr.hits.length >= mr.total || !mr.hits.length;
+  $('#mr-status').textContent = mr.loaded && mr.hits.length ? `${mr.hits.length} of ${fmtNum(mr.total)}` : '';
+}
+
+function skeletonRows() {
+  return Array.from({ length: 6 }, () => `<div class="mr-item sk"><div class="mr-icon"></div><div class="mr-text"><i></i><i></i></div></div>`).join('');
+}
+
+async function mrLoad(reset) {
+  const id = ++mr.reqId;
+  if (reset) { mr.offset = 0; mr.hits = []; mr.loaded = false; renderModrinth(); }
+  try {
+    const [res, inst] = await Promise.all([
+      api.modrinth.search({ query: mr.q, sort: mr.sort, offset: mr.offset, limit: 20 }),
+      api.modrinth.installed(),
+    ]);
+    if (id !== mr.reqId) return; // a newer search superseded this one
+    mr.installed = inst;
+    mr.total = res.total;
+    mr.hits = reset ? res.hits : mr.hits.concat(res.hits);
+    mr.offset = mr.hits.length;
+    mr.loaded = true;
+    renderModrinth();
+  } catch (e) {
+    if (id !== mr.reqId) return;
+    mr.loaded = true;
+    renderModrinth();
+    $('#mr-status').textContent = 'Could not reach Modrinth. Check your connection.';
+    toast(e.message, 'error');
+  }
+}
+
+async function mrRefreshInstalled() {
+  try { mr.installed = await api.modrinth.installed(); } catch { /* ignore */ }
+  renderModrinth();
+}
+
+let mrTimer;
+$('#mr-q').addEventListener('input', (e) => {
+  clearTimeout(mrTimer);
+  mrTimer = setTimeout(() => { mr.q = e.target.value.trim(); mrLoad(true); }, 320);
+});
+$('#mr-sort').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  mr.sort = b.dataset.sort; mrLoad(true);
+});
+$('#mr-view').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  mr.view = b.dataset.view;
+  if (mr.view === 'installed') mrRefreshInstalled(); else renderModrinth();
+});
+$('#mr-more').addEventListener('click', () => mrLoad(false));
+$('#mr-list').addEventListener('error', (e) => {
+  if (e.target.tagName === 'IMG') e.target.replaceWith(Object.assign(document.createElement('div'), { className: 'mr-icon ph', textContent: '•' }));
+}, true);
+$('#mr-list').addEventListener('click', async (e) => {
+  const ins = e.target.closest('[data-install]');
+  const rem = e.target.closest('[data-remove]');
+  if (ins) {
+    const id = ins.dataset.install;
+    mr.busy.set(id, { label: 'Installing', pct: 0 });
+    renderModrinth();
+    try {
+      const added = await api.modrinth.install(id);
+      toast(added.length > 1 ? `Installed ${added[added.length - 1]} + ${added.length - 1} dependenc${added.length === 2 ? 'y' : 'ies'}.` : `Installed ${added[0] || 'mod'}.`);
+    } catch (err) { toast(err.message, 'error', 7000); }
+    mr.busy.delete(id);
+    mrRefreshInstalled();
+  } else if (rem) {
+    const id = rem.dataset.remove;
+    mr.busy.set(id, { label: 'Removing', pct: 1 });
+    renderModrinth();
+    try { await api.modrinth.uninstall(id); } catch (err) { toast(err.message, 'error'); }
+    mr.busy.delete(id);
+    mrRefreshInstalled();
+  }
+});
+api.modrinth.onProgress(({ pct }) => {
+  for (const b of mr.busy.values()) if (b.label === 'Installing') b.pct = pct;
+  $$('#mr-list .mr-btn.busy i').forEach((el) => el.style.setProperty('--p', Math.round(pct * 100) + '%'));
+});
+
 /* ---------------- settings ---------------- */
 function fmtGb(mb) { return (mb / 1024).toFixed(mb % 1024 ? 1 : 0) + ' GB'; }
 
@@ -270,6 +396,7 @@ async function boot() {
     bloom.setTheme(settings.bloomTheme || 'auto');
     $('#build-tag').textContent = 'v' + info.version;
     $('#mc-version').textContent = info.mc;
+    $('#mr-version').textContent = info.mc;
     renderAccount();
     renderMods();
     renderSettings();
