@@ -114,7 +114,22 @@ async function minecraftLogin(xbox) {
   const gamePass = items.some((n) => /game_pass/i.test(n));
 
   if (status === 404 && (ownsJava || gamePass)) {
-    throw new Error(`${who}This account has Minecraft but no Java username yet. Open the official Minecraft Launcher once, pick your Java Edition name, then sign in here again.`);
+    // Owners occasionally get a spurious 404 (e.g. right after a rate limit or from some VPN exits): retry before giving up.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await new Promise((r) => setTimeout(r, 2500 * (attempt + 1)));
+      const again = await fetch(`${MCS}/minecraft/profile`, { headers: auth });
+      if (again.ok) {
+        const profile = await again.json();
+        if (profile && profile.id && profile.name) {
+          return {
+            profile: { id: profile.id, name: profile.name },
+            mclc: { access_token: login.access_token, client_token: crypto.randomUUID(), uuid: profile.id, name: profile.name, user_properties: '{}', meta: { type: 'msa', demo: false } },
+            expiresIn: (login.expires_in || 86400) * 1000,
+          };
+        }
+      }
+    }
+    throw new Error(`${who}This account owns Minecraft, but Minecraft's servers returned no Java profile for it. If you play on a different Microsoft account, click Sign in and choose that one. If this IS your account, try again in a few minutes (turning off a VPN can help). (HTTP 404)`);
   }
   if (status === 404) {
     throw new Error(`${who}Minecraft's servers found no Java Edition profile on this account. If you own the game on a different Microsoft account, click Sign in again and choose that one ("Use another account").`);
