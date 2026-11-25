@@ -56,11 +56,20 @@ async function readBody(res) {
  */
 async function minecraftLogin(xbox) {
   const identityToken = await xbox.xAuth('rp://api.minecraftservices.com/');
-  const loginRes = await fetch(`${MCS}/authentication/login_with_xbox`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ identityToken }),
-  });
+  let loginRes;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    loginRes = await fetch(`${MCS}/authentication/login_with_xbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ identityToken }),
+    });
+    if (loginRes.ok || (loginRes.status !== 429 && loginRes.status < 500)) break;
+    const after = Number(loginRes.headers && loginRes.headers.get && loginRes.headers.get('retry-after'));
+    await new Promise((r) => setTimeout(r, Math.min(15000, (after > 0 ? after * 1000 : 3000 * (attempt + 1)))));
+  }
+  if (loginRes.status === 429) {
+    throw new Error("Minecraft is limiting sign-ins right now because there were too many in a short time. Wait about 10–15 minutes, then try again. (You'll stay signed in after that, so this shouldn't come back.)");
+  }
   if (!loginRes.ok) {
     const body = await readBody(loginRes);
     throw new Error(`Minecraft's login server refused the Xbox sign-in (HTTP ${loginRes.status}${body ? ': ' + body : ''}).`);
@@ -116,8 +125,9 @@ async function minecraftLogin(xbox) {
 
 async function finish(xbox) {
   const mc = await minecraftLogin(xbox);
-  session = { profile: mc.profile, mclc: mc.mclc, expires: Date.now() + Math.min(mc.expiresIn, 20 * 60 * 1000) };
-  store.saveAccount({ profile: session.profile, refresh: xbox.save() });
+  // Minecraft tokens last ~24h; keep a 30 min safety margin and remember it across restarts.
+  session = { profile: mc.profile, mclc: mc.mclc, expires: Date.now() + Math.max(5 * 60 * 1000, mc.expiresIn - 30 * 60 * 1000) };
+  store.saveAccount({ profile: session.profile, refresh: xbox.save(), mc: { mclc: session.mclc, expires: session.expires } });
   return publicAccount();
 }
 
@@ -134,6 +144,11 @@ async function login() {
 /** Returns MCLC authorization, refreshing the saved Microsoft token if needed. */
 async function authorization() {
   if (session && session.expires > Date.now()) return session.mclc;
+  const cached = store.loadAccount();
+  if (cached && cached.mc && cached.mc.expires > Date.now() && cached.profile) {
+    session = { profile: cached.profile, mclc: cached.mc.mclc, expires: cached.mc.expires };
+    return session.mclc;
+  }
   const saved = store.loadAccount();
   if (!saved || !saved.refresh) throw new Error('Sign in with Microsoft first.');
   try {
@@ -142,6 +157,7 @@ async function authorization() {
     return session.mclc;
   } catch (e) {
     const err = await toError(e);
+    if (/limiting sign-ins/.test(err.message)) throw err;
     throw new Error('Your sign-in expired. Please sign in again. (' + err.message + ')');
   }
 }
