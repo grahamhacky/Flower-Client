@@ -20,6 +20,8 @@ const DEFAULTS = {
   closeOnLaunch: false,
   performanceMods: { sodium: true, lithium: true, 'ferrite-core': true, entityculling: false },
   bloomTheme: 'auto',
+  analytics: false,
+  analyticsAsked: false,
   jvmArgs: '-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200',
 };
 
@@ -74,4 +76,13 @@ function loadAccount() {
 
 function clearAccount() { fs.rmSync(tokenFile(), { force: true }); }
 
-module.exports = { load, save, saveAccount, loadAccount, clearAccount, DEFAULTS };
+/** A random id for de-duping anonymous stats. Created only when analytics is on; never tied to any account. */
+function installId() {
+  const s = load();
+  if (s.installId) return s.installId;
+  const id = require('crypto').randomUUID();
+  save({ installId: id });
+  return id;
+}
+
+module.exports = { load, save, saveAccount, loadAccount, clearAccount, installId, DEFAULTS };

@@ -28,6 +28,7 @@ public final class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject root = new JsonObject();
     private static final int LAYOUT = 2;
+    private static String discordAppId = "";
 
     private ConfigManager() {}
 
@@ -43,6 +44,7 @@ public final class ConfigManager {
             JsonObject mods = root.has("modules") ? root.getAsJsonObject("modules") : new JsonObject();
             // layout 2 = the redesigned HUD; positions saved by older builds are dropped once
             boolean keepPositions = root.has("layout") && root.get("layout").getAsInt() >= LAYOUT;
+            if (root.has("discordAppId")) discordAppId = root.get("discordAppId").getAsString();
             if (root.has("sky")) {
                 try { SkyTime.set(SkyTime.Mode.valueOf(root.get("sky").getAsString())); } catch (IllegalArgumentException ignored) {}
             }
@@ -89,6 +91,7 @@ public final class ConfigManager {
         root.add("modules", mods);
         root.addProperty("layout", LAYOUT);
         root.addProperty("sky", SkyTime.mode().name());
+        root.addProperty("discordAppId", discordAppId);
         root.addProperty("version", FlowerClient.VERSION);
         try {
             Path f = file();
@@ -100,6 +103,8 @@ public final class ConfigManager {
             FlowerClient.LOG.error("Could not save Flower Client config", ex);
         }
     }
+
+    public static String getDiscordAppId() { return discordAppId; }
 
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 }

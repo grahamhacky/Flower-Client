@@ -28,12 +28,46 @@
   "build": {
     "appId": "dev.flowerclient.launcher",
     "productName": "Flower Client",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "src/**/*", "renderer/**/*", "node_modules/**/*", "package.json"],
-    "extraResources": [{ "from": "resources/mods", "to": "mods", "filter": ["*.jar"] }],
-    "win": { "target": "nsis", "icon": "build/icon.png" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "shortcutName": "Flower Client" },
-    "mac": { "target": "dmg", "icon": "build/icon.png", "category": "public.app-category.games" },
-    "linux": { "target": "AppImage", "icon": "build/icon.png", "category": "Game" }
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "stats-endpoint.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/mods",
+        "to": "mods",
+        "filter": [
+          "*.jar"
+        ]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Flower Client"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.png",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Game"
+    }
   }
 }

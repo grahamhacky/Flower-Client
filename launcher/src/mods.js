@@ -28,6 +28,7 @@ const MODULES = [
   ['Zoom', 'Hold C to zoom, scroll to adjust', true, 'Utility'],
   ['Toggle Sprint', 'Always sprint when walking forward', false, 'Utility'],
   ['Biome Tint', "HUD accent follows the biome you're in", true, 'Utility'],
+  ['Discord Presence', 'Show Flower Client on your Discord profile', false, 'Utility'],
 ].map(([name, desc, def, category]) => ({ name, desc, def, category }));
 
 function bundledModDirs() {
@@ -134,4 +135,17 @@ function setModule(gameDir, name, enabled) {
   return readModules(gameDir);
 }
 
-module.exports = { syncMods, readModules, setModule, PERFORMANCE, findBundledFlowerJar };
+function readRawConfig(gameDir) {
+  try { return JSON.parse(fs.readFileSync(configPath(gameDir), 'utf8')); } catch { return {}; }
+}
+function getDiscordAppId(gameDir) { return String(readRawConfig(gameDir).discordAppId || ''); }
+function setDiscordAppId(gameDir, id) {
+  const file = configPath(gameDir);
+  const cfg = readRawConfig(gameDir);
+  cfg.discordAppId = String(id || '').trim().replace(/[^0-9]/g, '');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(cfg, null, 2));
+  return cfg.discordAppId;
+}
+
+module.exports = { syncMods, readModules, setModule, getDiscordAppId, setDiscordAppId, PERFORMANCE, findBundledFlowerJar };

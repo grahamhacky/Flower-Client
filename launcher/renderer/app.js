@@ -331,6 +331,16 @@ function renderSettings() {
   $('#jvmArgs').value = s.jvmArgs || '';
   $('#closeOnLaunch').checked = !!s.closeOnLaunch;
   renderThemes();
+  renderIntegrations();
+}
+
+async function renderIntegrations() {
+  try {
+    const a = await api.analytics.get();
+    $('#analytics').checked = !!a.analytics;
+    $('#field-analytics').style.display = a.available ? '' : 'none';
+  } catch { /* ignore */ }
+  try { $('#discordAppId').value = await api.discord.getAppId(); } catch { /* ignore */ }
 }
 
 function renderThemes() {
@@ -372,6 +382,15 @@ $('#browse-java').addEventListener('click', async () => {
   if (p) { await save({ javaPath: p }); renderSettings(); }
 });
 $('#clear-java').addEventListener('click', async () => { await save({ javaPath: '' }); renderSettings(); });
+$('#analytics').addEventListener('change', async (e) => { await api.analytics.set(e.target.checked); });
+$('#discordAppId').addEventListener('change', async (e) => {
+  try { e.target.value = await api.discord.setAppId(e.target.value); toast('Saved. Enable "Discord Presence" in Mods, and make sure Discord is open.'); }
+  catch (err) { toast(err.message, 'error'); }
+});
+$('#discord-help').addEventListener('click', () => {
+  window.open('https://discord.com/developers/applications', '_blank', 'noopener');
+  toast('Create an application, copy its Application ID here, and upload a square icon named "flower" under Rich Presence > Art Assets.', 'info', 9000);
+});
 
 /* ---------------- home facts ---------------- */
 function renderFacts() {
@@ -421,5 +440,17 @@ setTimeout(() => bloom.bloom(), 1100);
 setTimeout(reveal, 8500); // safety net
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key === 'Enter') reveal(); });
 
-boot();
+async function maybeAskConsent() {
+  try {
+    const a = await api.analytics.get();
+    if (a.asked || !a.available) return;
+    const scrim = $('#consent');
+    scrim.hidden = false;
+    const choose = async (on) => { scrim.hidden = true; try { await api.analytics.set(on); } catch { /* ignore */ } renderIntegrations(); };
+    $('#consent-yes').addEventListener('click', () => choose(true), { once: true });
+    $('#consent-no').addEventListener('click', () => choose(false), { once: true });
+  } catch { /* ignore */ }
+}
+
+boot().then(maybeAskConsent);
 $('#settings').addEventListener('submit', (e) => e.preventDefault());

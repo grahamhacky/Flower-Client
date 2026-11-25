@@ -39,6 +39,13 @@ jobs:
         with: { name: flowerclient-mod, path: launcher/resources/mods }
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - name: Write stats endpoint (from secret)
+        working-directory: launcher
+        shell: bash
+        run: |
+          printf '{"url":"%s"}' "${STATS_WEBHOOK}" > stats-endpoint.json
+        env:
+          STATS_WEBHOOK: ${{ secrets.STATS_WEBHOOK }}
       - name: Install
         working-directory: launcher
         run: npm install

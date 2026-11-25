@@ -6,6 +6,7 @@ const auth = require('./src/auth');
 const game = require('./src/game');
 const mods = require('./src/mods');
 const modrinth = require('./src/modrinth');
+const stats = require('./src/stats');
 
 let win;
 
@@ -39,6 +40,7 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  win.webContents.once('did-finish-load', () => stats.send('launch'));
   win.once('ready-to-show', () => win.show());
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
@@ -79,9 +81,14 @@ handle('modrinth:search', (opts) => modrinth.search(store.load().gameDir, game.M
 handle('modrinth:installed', () => modrinth.installed(store.load().gameDir));
 handle('modrinth:install', (id) => modrinth.install(store.load().gameDir, game.MC_VERSION, id, (p) => send('modrinth:progress', p)));
 handle('modrinth:uninstall', (id) => modrinth.uninstall(store.load().gameDir, id));
+handle('analytics:get', () => { const s = store.load(); return { analytics: s.analytics, asked: s.analyticsAsked, available: stats.hasEndpoint() }; });
+handle('analytics:set', (on) => { store.save({ analytics: !!on, analyticsAsked: true }); if (on) stats.send('opt_in'); return store.load().analytics; });
+handle('discord:getAppId', () => mods.getDiscordAppId(store.load().gameDir));
+handle('discord:setAppId', (id) => mods.setDiscordAppId(store.load().gameDir, id));
 handle('app:info', () => ({ version: app.getVersion(), mc: game.MC_VERSION, flowerBundled: !!mods.findBundledFlowerJar(), platform: process.platform }));
 
 handle('game:launch', () => game.launch((type, payload) => {
+  if (type === 'state' && payload === 'running') stats.send('play');
   if (type === 'state' && payload === 'running' && store.load().closeOnLaunch) setTimeout(() => app.quit(), 1500);
   send('game:' + type, payload);
 }));

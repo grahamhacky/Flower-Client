@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('flower', {
   account: { get: () => call('account:get'), login: () => call('account:login'), logout: () => call('account:logout') },
   modules: { get: () => call('modules:get'), set: (n, e) => call('modules:set', n, e), performance: () => call('mods:performance') },
   app: { info: () => call('app:info') },
+  analytics: { get: () => call('analytics:get'), set: (on) => call('analytics:set', on) },
+  discord: { getAppId: () => call('discord:getAppId'), setAppId: (id) => call('discord:setAppId', id) },
   modrinth: {
     search: (opts) => call('modrinth:search', opts),
     installed: () => call('modrinth:installed'),

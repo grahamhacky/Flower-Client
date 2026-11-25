@@ -153,6 +153,17 @@
           <div class="label"><b>JVM arguments</b><span>For advanced users. Memory is set above.</span></div>
           <div class="control"><input type="text" id="jvmArgs" class="mono" spellcheck="false" /></div>
         </div>
+        <div class="field" id="field-analytics">
+          <div class="label"><b>Anonymous stats</b><span>Opt-in. No account, IP or hardware info, just launch counts and popular mods.</span></div>
+          <div class="control"><label class="switch"><input type="checkbox" id="analytics" /><span></span></label></div>
+        </div>
+        <div class="field">
+          <div class="label"><b>Discord App ID</b><span>For Discord Rich Presence. Create a free app at discord.com/developers, paste its Application ID, then enable "Discord Presence" in Mods.</span></div>
+          <div class="control path">
+            <input type="text" id="discordAppId" class="mono" inputmode="numeric" placeholder="e.g. 1312345678901234567" spellcheck="false" />
+            <button type="button" class="ghost" id="discord-help">Guide</button>
+          </div>
+        </div>
         <div class="field">
           <div class="label"><b>Close launcher on start</b><span>Quit Flower once the game window opens.</span></div>
           <div class="control"><label class="switch"><input type="checkbox" id="closeOnLaunch" /><span></span></label></div>
@@ -169,6 +180,23 @@
       <pre class="log mono" id="log"></pre>
     </section>
   </main>
+
+  <div class="modal-scrim" id="consent" hidden>
+    <div class="modal">
+      <div class="modal-glyph">✿</div>
+      <h3>Help improve Flower?</h3>
+      <p>Flower can send <b>anonymous</b> usage stats: how often it's launched, your OS, the Minecraft version and which performance mods are popular.</p>
+      <ul class="modal-list">
+        <li>No account name, IP address or hardware info</li>
+        <li>Never your worlds, mods list or anything you type</li>
+        <li>Change your mind anytime in Settings</li>
+      </ul>
+      <div class="modal-actions">
+        <button class="ghost" id="consent-no">No thanks</button>
+        <button class="primary-btn" id="consent-yes">Sure, send anonymous stats</button>
+      </div>
+    </div>
+  </div>
 
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 

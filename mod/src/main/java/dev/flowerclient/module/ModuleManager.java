@@ -30,6 +30,7 @@ public final class ModuleManager {
         add(ZOOM = new ZoomModule());
         add(new ToggleSprintModule());
         add(new BiomeTintModule());
+        add(new DiscordPresenceModule());
     }
 
     private static void add(Module m) {
