@@ -48,6 +48,8 @@ function createWindow() {
   win.on('unmaximize', () => send('window:maximized', false));
 }
 
+auth.setLogger((line) => send('game:log', line));
+
 function send(channel, payload) { if (win && !win.isDestroyed()) win.webContents.send(channel, payload); }
 
 const handle = (channel, fn) => ipcMain.handle(channel, async (_e, ...args) => {

@@ -40,7 +40,34 @@ function publicAccount() {
 }
 
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const MCS = 'https://api.minecraftservices.com';
+
+/** Diagnostic lines go to the launcher's Log tab (never tokens). */
+let logger = () => {};
+function setLogger(fn) { logger = typeof fn === 'function' ? fn : () => {}; }
+const diag = (msg) => { try { logger('[sign-in] ' + msg); } catch { /* ignore */ } };
+
+/**
+ * Last good Java profile per Minecraft account id (the `username` field from login_with_xbox,
+ * which is stable per Microsoft account). Lets a temporary 404 from the profile API fall back
+ * to the profile this same account had last time. Holds only UUIDs and names.
+ */
+function knownFile() {
+  const { app } = require('electron');
+  return path.join(app.getPath('userData'), 'known-profiles.json');
+}
+function readKnown() { try { return JSON.parse(fs.readFileSync(knownFile(), 'utf8')); } catch { return {}; } }
+function rememberProfile(accountId, profile) {
+  if (!accountId || !profile) return;
+  try {
+    const k = readKnown();
+    k[accountId] = { id: profile.id, name: profile.name, at: Date.now() };
+    fs.mkdirSync(path.dirname(knownFile()), { recursive: true });
+    fs.writeFileSync(knownFile(), JSON.stringify(k, null, 2));
+  } catch { /* best effort */ }
+}
 
 async function gamertag(xbox) {
   try { return (await (await xbox.getSocial()).getProfile()).gamerTag; } catch { return null; }
@@ -75,7 +102,13 @@ async function minecraftLogin(xbox) {
     throw new Error(`Minecraft's login server refused the Xbox sign-in (HTTP ${loginRes.status}${body ? ': ' + body : ''}).`);
   }
   const login = await loginRes.json();
+  diag(`login_with_xbox OK (account ${String(login.username || '?').slice(0, 8)}…, token valid ${Math.round((login.expires_in || 0) / 3600)}h)`);
   const auth = { Authorization: `Bearer ${login.access_token}`, Accept: 'application/json' };
+  const build = (profile) => ({
+    profile: { id: profile.id, name: profile.name },
+    mclc: { access_token: login.access_token, client_token: crypto.randomUUID(), uuid: profile.id, name: profile.name, user_properties: '{}', meta: { type: 'msa', demo: false } },
+    expiresIn: (login.expires_in || 86400) * 1000,
+  });
 
   let profileRes;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -86,6 +119,8 @@ async function minecraftLogin(xbox) {
   if (profileRes.ok) {
     const profile = await profileRes.json();
     if (profile && profile.id && profile.name) {
+      diag(`profile OK: ${profile.name}`);
+      rememberProfile(login.username, profile);
       return {
         profile: { id: profile.id, name: profile.name },
         mclc: {
@@ -103,6 +138,8 @@ async function minecraftLogin(xbox) {
 
   // No profile. Work out why.
   const status = profileRes.status;
+  const firstBody = await readBody(profileRes);
+  diag(`profile lookup failed: HTTP ${status} ${firstBody}`);
   const tag = await gamertag(xbox);
   const who = tag ? `You signed in as Xbox account "${tag}". ` : '';
   let items = [];
@@ -112,15 +149,18 @@ async function minecraftLogin(xbox) {
   } catch { /* ignore */ }
   const ownsJava = items.some((n) => n === 'game_minecraft' || n === 'product_minecraft');
   const gamePass = items.some((n) => /game_pass/i.test(n));
+  diag(`Xbox account: ${tag || '?'}; entitlements: ${items.length ? items.join(', ') : '(none)'}`);
 
   if (status === 404 && (ownsJava || gamePass)) {
     // Owners occasionally get a spurious 404 (e.g. right after a rate limit or from some VPN exits): retry before giving up.
     for (let attempt = 0; attempt < 2; attempt++) {
       await new Promise((r) => setTimeout(r, 2500 * (attempt + 1)));
       const again = await fetch(`${MCS}/minecraft/profile`, { headers: auth });
+      diag(`profile retry ${attempt + 1}: HTTP ${again.status}`);
       if (again.ok) {
         const profile = await again.json();
         if (profile && profile.id && profile.name) {
+          rememberProfile(login.username, profile);
           return {
             profile: { id: profile.id, name: profile.name },
             mclc: { access_token: login.access_token, client_token: crypto.randomUUID(), uuid: profile.id, name: profile.name, user_properties: '{}', meta: { type: 'msa', demo: false } },
@@ -129,13 +169,20 @@ async function minecraftLogin(xbox) {
         }
       }
     }
+    const known = readKnown()[login.username];
+    if (known && known.id && known.name) {
+      diag(`profile API keeps saying 404; using this account's last known profile (${known.name})`);
+      return build(known);
+    }
+    if (gamePass && !ownsJava) {
+      throw new Error(`${who}This account has Minecraft through Game Pass but no Java Edition profile yet. Open the official Minecraft Launcher once with this account, start Java Edition and pick a name, then sign in here again. (HTTP 404)`);
+    }
     throw new Error(`${who}This account owns Minecraft, but Minecraft's servers returned no Java profile for it. If you play on a different Microsoft account, click Sign in and choose that one. If this IS your account, try again in a few minutes (turning off a VPN can help). (HTTP 404)`);
   }
   if (status === 404) {
     throw new Error(`${who}Minecraft's servers found no Java Edition profile on this account. If you own the game on a different Microsoft account, click Sign in again and choose that one ("Use another account").`);
   }
-  const body = await readBody(profileRes);
-  throw new Error(`${who}Could not load your Minecraft profile (HTTP ${status}${body ? ': ' + body : ''}).`);
+  throw new Error(`${who}Could not load your Minecraft profile (HTTP ${status}${firstBody ? ': ' + firstBody : ''}). Details are in the Log tab.`);
 }
 
 async function finish(xbox) {
@@ -179,4 +226,4 @@ async function authorization() {
 
 function logout() { session = null; store.clearAccount(); }
 
-module.exports = { login, logout, authorization, publicAccount };
+module.exports = { login, logout, authorization, publicAccount, setLogger };
