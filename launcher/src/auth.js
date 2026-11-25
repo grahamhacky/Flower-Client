@@ -188,7 +188,7 @@ async function minecraftLogin(xbox) {
 async function finish(xbox) {
   const mc = await minecraftLogin(xbox);
   // Minecraft tokens last ~24h; keep a 30 min safety margin and remember it across restarts.
-  session = { profile: mc.profile, mclc: mc.mclc, expires: Date.now() + Math.max(5 * 60 * 1000, mc.expiresIn - 30 * 60 * 1000) };
+  session = { profile: mc.profile, mclc: mc.mclc, expires: Date.now() + Math.max(5 * 60 * 1000, mc.expiresIn - 2 * 60 * 1000) };
   store.saveAccount({ profile: session.profile, refresh: xbox.save(), mc: { mclc: session.mclc, expires: session.expires } });
   return publicAccount();
 }
@@ -220,7 +220,13 @@ async function authorization() {
   } catch (e) {
     const err = await toError(e);
     if (/limiting sign-ins/.test(err.message)) throw err;
-    throw new Error('Your sign-in expired. Please sign in again. (' + err.message + ')');
+    // Stay signed in: if we still hold a usable Minecraft token, use it rather than forcing a new login.
+    if (saved.mc && saved.mc.mclc && saved.mc.expires > Date.now()) {
+      diag('Could not refresh the Microsoft token; using the saved Minecraft session.');
+      session = { profile: saved.profile, mclc: saved.mc.mclc, expires: saved.mc.expires };
+      return session.mclc;
+    }
+    throw new Error('Could not reach the sign-in servers. Check your connection and try again. (' + err.message + ')');
   }
 }
 
