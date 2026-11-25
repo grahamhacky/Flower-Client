@@ -18,17 +18,17 @@ public abstract class TextHudModule extends HudModule {
         return l.isEmpty() ? value(mc) : l + " " + value(mc);
     }
 
-    @Override public int width(MinecraftClient mc) { return mc.textRenderer.getWidth(line(mc)) + PAD * 2; }
+    @Override public int width(MinecraftClient mc) { return mc.textRenderer.getWidth(line(mc)) + PAD * 2 + 1; }
     @Override public int height(MinecraftClient mc) { return mc.textRenderer.fontHeight + PAD * 2 - 1; }
 
     @Override
     public void render(DrawContext ctx, MinecraftClient mc) {
         String l = label();
-        int cx = PAD;
+        int cx = PAD + 1;
         if (!l.isEmpty()) {
-            ctx.drawText(mc.textRenderer, l, cx, PAD, Theme.hudAccent, true);
+            ctx.drawText(mc.textRenderer, l, cx, PAD, Theme.hudAccent, !background);
             cx += mc.textRenderer.getWidth(l + " ");
         }
-        ctx.drawText(mc.textRenderer, value(mc), cx, PAD, Theme.TEXT, true);
+        ctx.drawText(mc.textRenderer, value(mc), cx, PAD, Theme.TEXT, !background);
     }
 }

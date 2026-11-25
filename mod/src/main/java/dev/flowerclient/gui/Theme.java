@@ -9,7 +9,7 @@ public final class Theme {
     public static final int POLLEN = 0xFFFFD678;
     public static final int TEXT = 0xFFF5EEF1;
     public static final int MUTED = 0xFF9C8F96;
-    public static final int HUD_BG = 0x90141015;
+    public static final int HUD_BG = 0x7A0E0A10;
     public static final int PANEL = 0xF0141015;
     public static final int PANEL_2 = 0xFF1D181E;
     public static final int PANEL_3 = 0xFF2A232B;
@@ -43,6 +43,13 @@ public final class Theme {
         ctx.fill(x + w - 2, y + 1, x + w - 1, y + h - 1, color);
         ctx.fill(x, y + 2, x + 1, y + h - 2, color);
         ctx.fill(x + w - 1, y + 2, x + w, y + h - 2, color);
+    }
+
+    /** HUD box: soft dark glass, a 1px top highlight and a thin accent tick on the left. */
+    public static void hudPanel(DrawContext ctx, int x, int y, int w, int h) {
+        panel(ctx, x, y, w, h, HUD_BG);
+        ctx.fill(x + 1, y, x + w - 1, y + 1, 0x1CFFFFFF);
+        ctx.fill(x, y + 3, x + 1, y + h - 3, withAlpha(hudAccent, 0.85f));
     }
 
     public static void outline(DrawContext ctx, int x, int y, int w, int h, int color) {

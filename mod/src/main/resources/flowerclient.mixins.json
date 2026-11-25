@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "dev.flowerclient.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["GameRendererMixin", "MinecraftClientMixin", "MouseMixin"],
+  "client": ["ClientWorldPropertiesMixin", "GameRendererMixin", "MinecraftClientMixin", "MouseMixin", "SplashOverlayMixin"],
   "injectors": { "defaultRequire": 1 }
 }

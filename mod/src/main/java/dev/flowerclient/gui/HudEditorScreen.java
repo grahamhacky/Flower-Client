@@ -25,6 +25,14 @@ public class HudEditorScreen extends Screen {
     @Override public boolean shouldPause() { return false; }
 
     @Override
+    protected void init() {
+        addDrawableChild(new FlowerButton(width / 2 - 45, 8, 90, 18, net.minecraft.text.Text.literal("Reset layout"), b -> {
+            dev.flowerclient.module.ModuleManager.resetLayout();
+            dev.flowerclient.module.ModuleManager.layoutDefaults(client);
+        }, FlowerButton.Style.CENTER));
+    }
+
+    @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
         if (client != null && client.world != null) ctx.fill(0, 0, width, height, 0x30000000);
         else super.renderBackground(ctx, mouseX, mouseY, delta);
@@ -75,8 +83,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        if (super.mouseClicked(mx, my, button)) return true;
         HudModule m = at(mx, my);
-        if (m == null) return super.mouseClicked(mx, my, button);
+        if (m == null) return false;
         if (button == 1) { m.background = !m.background; return true; }
         if (button == 0) { dragging = m; offX = mx - m.x; offY = my - m.y; return true; }
         return false;

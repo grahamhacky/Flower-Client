@@ -32,6 +32,8 @@ public class PotionEffectsModule extends HudModule {
         return out;
     }
 
+    @Override public float[] defaultPosition(MinecraftClient mc, int sw, int sh) { return new float[]{sw - width(mc) - 4, 54}; }
+
     @Override public boolean shouldRender(MinecraftClient mc) {
         return mc.player != null && !mc.player.getStatusEffects().isEmpty();
     }
@@ -47,12 +49,12 @@ public class PotionEffectsModule extends HudModule {
     @Override
     public void render(DrawContext ctx, MinecraftClient mc) {
         List<String[]> r = rows(mc);
-        if (r.isEmpty()) { ctx.drawText(mc.textRenderer, "No effects", PAD, PAD, Theme.MUTED, true); return; }
+        if (r.isEmpty()) { ctx.drawText(mc.textRenderer, "No effects", PAD + 1, PAD, Theme.MUTED, !background); return; }
         int w = width(mc);
         for (int i = 0; i < r.size(); i++) {
             int y = PAD + i * 10;
-            ctx.drawText(mc.textRenderer, r.get(i)[0], PAD, y, Theme.TEXT, true);
-            ctx.drawText(mc.textRenderer, r.get(i)[1], w - PAD - mc.textRenderer.getWidth(r.get(i)[1]), y, Theme.hudAccent, true);
+            ctx.drawText(mc.textRenderer, r.get(i)[0], PAD + 1, y, Theme.TEXT, !background);
+            ctx.drawText(mc.textRenderer, r.get(i)[1], w - PAD - mc.textRenderer.getWidth(r.get(i)[1]), y, Theme.hudAccent, !background);
         }
     }
 }

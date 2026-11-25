@@ -7,6 +7,8 @@ import net.minecraft.client.network.PlayerListEntry;
 public class PingModule extends TextHudModule {
     public PingModule() { super("Ping", "Latency to the server", true, 60, 4); }
 
+    @Override public float[] defaultPosition(MinecraftClient mc, int sw, int sh) { return new float[]{64, 4}; }
+
     @Override public boolean shouldRender(MinecraftClient mc) {
         return mc.player != null && mc.getNetworkHandler() != null && !mc.isInSingleplayer();
     }

@@ -9,6 +9,7 @@ import dev.flowerclient.FlowerClient;
 import dev.flowerclient.module.HudModule;
 import dev.flowerclient.module.Module;
 import dev.flowerclient.module.ModuleManager;
+import dev.flowerclient.module.SkyTime;
 import dev.flowerclient.module.impl.ZoomModule;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -26,6 +27,7 @@ import java.util.Map;
 public final class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static JsonObject root = new JsonObject();
+    private static final int LAYOUT = 2;
 
     private ConfigManager() {}
 
@@ -39,15 +41,20 @@ public final class ConfigManager {
             if (!el.isJsonObject()) return;
             root = el.getAsJsonObject();
             JsonObject mods = root.has("modules") ? root.getAsJsonObject("modules") : new JsonObject();
+            // layout 2 = the redesigned HUD; positions saved by older builds are dropped once
+            boolean keepPositions = root.has("layout") && root.get("layout").getAsInt() >= LAYOUT;
+            if (root.has("sky")) {
+                try { SkyTime.set(SkyTime.Mode.valueOf(root.get("sky").getAsString())); } catch (IllegalArgumentException ignored) {}
+            }
             for (Map.Entry<String, JsonElement> e : mods.entrySet()) {
                 Module m = ModuleManager.byName(e.getKey());
                 if (m == null || !e.getValue().isJsonObject()) continue;
                 JsonObject o = e.getValue().getAsJsonObject();
                 if (o.has("enabled")) m.setEnabled(o.get("enabled").getAsBoolean());
                 if (m instanceof HudModule h) {
-                    if (o.has("x")) h.x = o.get("x").getAsFloat();
-                    if (o.has("y")) h.y = o.get("y").getAsFloat();
-                    if (o.has("scale")) h.scale = clamp(o.get("scale").getAsFloat(), 0.5f, 3f);
+                    if (keepPositions && o.has("x")) h.x = o.get("x").getAsFloat();
+                    if (keepPositions && o.has("y")) h.y = o.get("y").getAsFloat();
+                    if (keepPositions && o.has("scale")) h.scale = clamp(o.get("scale").getAsFloat(), 0.5f, 3f);
                     if (o.has("background")) h.background = o.get("background").getAsBoolean();
                 }
                 if (m instanceof ZoomModule z) {
@@ -80,6 +87,8 @@ public final class ConfigManager {
             mods.add(m.getName(), o);
         }
         root.add("modules", mods);
+        root.addProperty("layout", LAYOUT);
+        root.addProperty("sky", SkyTime.mode().name());
         root.addProperty("version", FlowerClient.VERSION);
         try {
             Path f = file();
