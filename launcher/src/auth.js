@@ -39,10 +39,84 @@ function publicAccount() {
   return acc && acc.profile ? { id: acc.profile.id, name: acc.profile.name } : null;
 }
 
+const crypto = require('crypto');
+const MCS = 'https://api.minecraftservices.com';
+
+async function gamertag(xbox) {
+  try { return (await (await xbox.getSocial()).getProfile()).gamerTag; } catch { return null; }
+}
+
+async function readBody(res) {
+  try { return (await res.text()).slice(0, 240); } catch { return ''; }
+}
+
+/**
+ * Minecraft sign-in, done directly instead of msmc.getMinecraft(): msmc reports *any*
+ * profile failure as "doesn't own Minecraft". This tells the real reason apart.
+ */
+async function minecraftLogin(xbox) {
+  const identityToken = await xbox.xAuth('rp://api.minecraftservices.com/');
+  const loginRes = await fetch(`${MCS}/authentication/login_with_xbox`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ identityToken }),
+  });
+  if (!loginRes.ok) {
+    const body = await readBody(loginRes);
+    throw new Error(`Minecraft's login server refused the Xbox sign-in (HTTP ${loginRes.status}${body ? ': ' + body : ''}).`);
+  }
+  const login = await loginRes.json();
+  const auth = { Authorization: `Bearer ${login.access_token}`, Accept: 'application/json' };
+
+  let profileRes;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    profileRes = await fetch(`${MCS}/minecraft/profile`, { headers: auth });
+    if (profileRes.ok || (profileRes.status !== 429 && profileRes.status < 500)) break;
+    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+  }
+  if (profileRes.ok) {
+    const profile = await profileRes.json();
+    if (profile && profile.id && profile.name) {
+      return {
+        profile: { id: profile.id, name: profile.name },
+        mclc: {
+          access_token: login.access_token,
+          client_token: crypto.randomUUID(),
+          uuid: profile.id,
+          name: profile.name,
+          user_properties: '{}',
+          meta: { type: 'msa', demo: false },
+        },
+        expiresIn: (login.expires_in || 86400) * 1000,
+      };
+    }
+  }
+
+  // No profile. Work out why.
+  const status = profileRes.status;
+  const tag = await gamertag(xbox);
+  const who = tag ? `You signed in as Xbox account "${tag}". ` : '';
+  let items = [];
+  try {
+    const ent = await fetch(`${MCS}/entitlements/mcstore`, { headers: auth });
+    if (ent.ok) items = ((await ent.json()).items || []).map((i) => i.name);
+  } catch { /* ignore */ }
+  const ownsJava = items.some((n) => n === 'game_minecraft' || n === 'product_minecraft');
+  const gamePass = items.some((n) => /game_pass/i.test(n));
+
+  if (status === 404 && (ownsJava || gamePass)) {
+    throw new Error(`${who}This account has Minecraft but no Java username yet. Open the official Minecraft Launcher once, pick your Java Edition name, then sign in here again.`);
+  }
+  if (status === 404) {
+    throw new Error(`${who}Minecraft's servers found no Java Edition profile on this account. If you own the game on a different Microsoft account, click Sign in again and choose that one ("Use another account").`);
+  }
+  const body = await readBody(profileRes);
+  throw new Error(`${who}Could not load your Minecraft profile (HTTP ${status}${body ? ': ' + body : ''}).`);
+}
+
 async function finish(xbox) {
-  const mc = await xbox.getMinecraft();
-  if (!mc.profile) throw new Error('This Microsoft account does not own Minecraft: Java Edition.');
-  session = { profile: { id: mc.profile.id, name: mc.profile.name }, mclc: mc.mclc(), expires: Date.now() + 20 * 60 * 1000 };
+  const mc = await minecraftLogin(xbox);
+  session = { profile: mc.profile, mclc: mc.mclc, expires: Date.now() + Math.min(mc.expiresIn, 20 * 60 * 1000) };
   store.saveAccount({ profile: session.profile, refresh: xbox.save() });
   return publicAccount();
 }
