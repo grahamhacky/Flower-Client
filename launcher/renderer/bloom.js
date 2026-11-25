@@ -10,6 +10,7 @@
   const RAMP = ' .,:-=+*#%@';
   const PETAL = ['#5a2236', '#8a2f52', '#b8436f', '#e0608f', '#f08cb0', '#f7b6cc', '#fde0ea'];
   const POLLEN = ['#6b4a16', '#b07d22', '#f0b545', '#ffd678', '#fff0c2'];
+  const LEAF = ['#16301f', '#24503a', '#3a7a55', '#5fae80', '#9fd8b4', '#d4f5df'];
   const SEED = '#f4a6c0';
 
   // Layers from outside in: count, length, width, open angle (rad from vertical), closed angle, tip curl, twist
@@ -55,7 +56,7 @@
       this.samples = buildSamples();
       this.state = 'seed'; // seed | blooming | open | scattering | gone
       this.t0 = performance.now();
-      this.bloomDur = 2600;
+      this.bloomDur = 5600;
       this.scatterDur = 2400;
       this.spin = 0;
       this.anchor = { x: 0.5, y: 0.52, size: 0.36 };
@@ -65,6 +66,7 @@
       this.anchorDur = 1;
       this.particles = [];
       this.onBloomed = null;
+      this.motes = Array.from({ length: 46 }, () => this.newMote(true));
       this.pointer = { x: 0, y: 0, tx: 0, ty: 0 };
       this.resize();
       window.addEventListener('resize', () => this.resize());
@@ -112,6 +114,14 @@
       };
     }
 
+    newMote(anywhere) {
+      const a = Math.random() * Math.PI * 2, r = 0.25 + Math.random() * 1.05;
+      return {
+        x: Math.cos(a) * r, z: Math.sin(a) * r, y: anywhere ? -0.9 + Math.random() * 1.8 : -0.9,
+        sp: 0.05 + Math.random() * 0.09, ph: Math.random() * 6.28, c: Math.random() < 0.6 ? 103 : 5,
+      };
+    }
+
     bloom() {
       this.state = 'blooming';
       this.t0 = performance.now();
@@ -136,15 +146,16 @@
 
     /** 0..1 progress of open-ness and scale, given the state. */
     shape(now) {
-      if (this.state === 'seed' || this.state === 'gone') return { scale: 0, open: 0 };
+      if (this.state === 'seed' || this.state === 'gone') return { scale: 0, open: 0, stem: 0 };
       if (this.state === 'blooming') {
         const t = clamp01((now - this.t0) / this.bloomDur);
-        const scale = easeOutCubic(clamp01(t / 0.55));
-        const open = easeInOutCubic(clamp01((t - 0.18) / 0.82));
+        const stem = easeOutCubic(clamp01(t / 0.38));
+        const scale = easeOutCubic(clamp01((t - 0.12) / 0.5));
+        const open = easeInOutCubic(clamp01((t - 0.32) / 0.68));
         if (t >= 1) { this.state = 'open'; if (this.onBloomed) this.onBloomed(); }
-        return { scale: 0.04 + scale * 0.96, open };
+        return { scale: 0.04 + scale * 0.96, open, stem };
       }
-      return { scale: 1, open: 1 };
+      return { scale: 1, open: 1, stem: 1 };
     }
 
     loop(now) {
@@ -162,7 +173,7 @@
       const a = this.currentAnchor();
       const cx = a.x * this.w, cy = a.y * this.h;
       const K = Math.min(this.w, this.h * 1.6) * a.size * 3.0;
-      const tilt = -0.98 + this.pointer.y * 0.1;
+      const tilt = -0.74 + this.pointer.y * 0.08;
       const yaw = this.spin + this.pointer.x * 0.25;
       const cyw = Math.cos(yaw), syw = Math.sin(yaw), ct = Math.cos(tilt), st = Math.sin(tilt);
       const D = 3.4;
@@ -193,7 +204,7 @@
         lum[i] = L; col[i] = cidx;
       };
 
-      const { scale, open } = this.shape(now);
+      const { scale, open, stem } = this.shape(now);
       const capture = this.state === 'open' || this.state === 'blooming';
       const pts = capture ? [] : null;
       const yOff = -0.32;
@@ -242,6 +253,54 @@
           if (pts) pts.push([x, y, z, 100 + 3]);
         }
       }
+      // stem + leaves
+      if (stem > 0) {
+        const SL = 1.35 * stem, NS = 60, SEG = 12, R = 0.042;
+        const stemAt = (s) => [0.08 * Math.sin(s * 2.3), yOff - 0.03 - s * SL, 0.04 * s];
+        for (let i = 0; i <= NS; i++) {
+          const sv = i / NS, [sx, sy, sz] = stemAt(sv);
+          for (let j = 0; j < SEG; j++) {
+            const a = (j / SEG) * Math.PI * 2, nx = Math.cos(a), nz = Math.sin(a);
+            plot(sx + nx * R, sy, sz + nz * R, nx, 0.1, nz, 203);
+            if (pts && (i & 1) === 0 && j % 3 === 0) pts.push([sx + nx * R, sy, sz + nz * R, 202]);
+          }
+        }
+        const leaves = [[0.42, 0.7], [0.66, 0.7 + Math.PI]];
+        for (const [at, phi] of leaves) {
+          const g = clamp01((stem - at) / (1 - at) * 1.6);
+          if (g <= 0) continue;
+          const [bx, by, bz] = stemAt(at);
+          const Rx = Math.cos(phi), Rz = Math.sin(phi), Tx = -Rz, Tz = Rx;
+          const len = 0.5 * g;
+          let rad = 0, up = 0;
+          for (let iu = 0; iu <= 24; iu++) {
+            const u = iu / 24, ang = 0.95 + 0.9 * u * u;
+            if (iu > 0) { rad += Math.sin(ang) * len / 24; up += Math.cos(ang) * len / 24; }
+            const wu = 0.15 * g * Math.pow(Math.sin(Math.PI * Math.pow(Math.max(u, 0.02), 0.8)), 1.1);
+            const inR = -Math.cos(ang), inY = Math.sin(ang);
+            for (let iv = 0; iv <= 10; iv++) {
+              const v = (iv / 10) * 2 - 1, lift = v * v * 0.35 * wu, lat = v * wu;
+              const r = rad + inR * lift;
+              const x = bx + Rx * r + Tx * lat, y = by + up + inY * lift, z = bz + Rz * r + Tz * lat;
+              const shade = Math.abs(v) < 0.12 ? 201 : Math.min(205, 202 + Math.round(u * 2));
+              plot(x, y, z, Rx * inR - Tx * v * 0.7, inY, Rz * inR - Tz * v * 0.7, shade);
+              if (pts && (iu & 1) === 0 && (iv & 1) === 0) pts.push([x, y, z, shade]);
+            }
+          }
+        }
+      }
+
+      // drifting pollen motes around the open flower
+      if (this.state === 'open') {
+        for (let i = 0; i < this.motes.length; i++) {
+          const m = this.motes[i];
+          m.y += m.sp * dt;
+          if (m.y > 1.0) { this.motes[i] = this.newMote(false); continue; }
+          const sway = Math.sin(now / 900 + m.ph) * 0.06;
+          const fade = Math.min(1, (m.y + 0.9) * 2) * Math.min(1, (1.0 - m.y) * 3);
+          plot(m.x + sway, m.y, m.z, undefined, 0, 0, m.c, 0.1 + 0.08 * fade);
+        }
+      }
       if (pts) this.lastPoints = pts;
 
       if (this.state === 'scattering') {
@@ -269,6 +328,17 @@
       const g = this.ctx;
       g.clearRect(0, 0, this.w, this.h);
       g.textBaseline = 'top';
+      const an = this.currentAnchor();
+      const shapeNow = this.state === 'open' ? 1 : this.state === 'blooming' ? clamp01((now - this.t0) / this.bloomDur) : 0;
+      if (shapeNow > 0) {
+        const gx = an.x * this.w, gy = an.y * this.h, gr = Math.min(this.w, this.h) * an.size * 2.2;
+        const grad = g.createRadialGradient(gx, gy, 0, gx, gy, gr);
+        grad.addColorStop(0, `rgba(232, 93, 138, ${0.13 * shapeNow})`);
+        grad.addColorStop(0.5, `rgba(159, 216, 180, ${0.04 * shapeNow})`);
+        grad.addColorStop(1, 'rgba(159, 216, 180, 0)');
+        g.fillStyle = grad;
+        g.beginPath(); g.arc(gx, gy, gr, 0, Math.PI * 2); g.fill();
+      }
       const { cols, rows, cw, ch, lum, col } = this;
       const n = cols * rows;
 
@@ -282,7 +352,7 @@
         b.push(i);
       }
       for (const [c, list] of buckets) {
-        g.fillStyle = c >= 100 ? POLLEN[c - 100] : PETAL[c];
+        g.fillStyle = c >= 200 ? LEAF[c - 200] : c >= 100 ? POLLEN[c - 100] : PETAL[c];
         for (const i of list) {
           const ri = Math.min(RAMP.length - 1, Math.max(1, Math.round(lum[i] * (RAMP.length - 1))));
           g.fillText(RAMP[ri], (i % cols) * cw, ((i / cols) | 0) * ch);

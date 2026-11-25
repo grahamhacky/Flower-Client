@@ -9,7 +9,7 @@ const state = { settings: null, account: null, modules: [], perf: {}, info: null
 const bloom = new window.FlowerBloom($('#bloom'));
 
 /* ---------------- placement of the flower per page ---------------- */
-const ANCHORS = { home: [0.71, 0.52, 0.25], mods: [0.9, 0.6, 0.2], settings: [0.9, 0.6, 0.2], log: [0.92, 0.18, 0.1] };
+const ANCHORS = { home: [0.7, 0.42, 0.22], mods: [0.9, 0.6, 0.2], settings: [0.9, 0.6, 0.2], log: [0.92, 0.18, 0.1] };
 function placeFlower(page, dur) {
   const [x, y, s] = ANCHORS[page] || ANCHORS.home;
   bloom.moveTo(x, y, s, dur);
@@ -112,6 +112,7 @@ $('#play').addEventListener('click', async () => {
 function regrow() {
   if (bloom.state === 'gone' || bloom.state === 'scattering') {
     const wait = bloom.state === 'scattering' ? 2600 : 200;
+    bloom.bloomDur = 3200; // regrowth is quicker than the first bloom
     setTimeout(() => bloom.bloom(), wait);
   }
 }
@@ -263,17 +264,17 @@ async function boot() {
 }
 
 /* intro: seed → bloom in the centre → glide to its spot as the UI fades in */
-bloom.anchor = bloom.anchorFrom = bloom.anchorTo = { x: 0.5, y: 0.5, size: 0.3 };
+bloom.anchor = bloom.anchorFrom = bloom.anchorTo = { x: 0.5, y: 0.4, size: 0.25 };
 let revealed = false;
 function reveal() {
   if (revealed) return;
   revealed = true;
-  placeFlower(state.page, 1300);
-  setTimeout(() => document.body.classList.remove('intro'), 250);
+  placeFlower(state.page, 1900);
+  setTimeout(() => document.body.classList.remove('intro'), 500);
 }
 bloom.onBloomed = reveal;
-setTimeout(() => bloom.bloom(), 450);
-setTimeout(reveal, 3600); // safety net
+setTimeout(() => bloom.bloom(), 1100);
+setTimeout(reveal, 8500); // safety net
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key === 'Enter') reveal(); });
 
 boot();
