@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../node_modules/@fontsource/jetbrains-mono/500.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="intro locked">
+<body class="intro">
   <canvas id="bloom" aria-hidden="true"></canvas>
   <div class="grain" aria-hidden="true"></div>
   <div class="intro-caption mono" aria-hidden="true"><span>flower</span><span class="dim">client</span></div>
@@ -153,10 +153,6 @@
           <div class="label"><b>JVM arguments</b><span>For advanced users. Memory is set above.</span></div>
           <div class="control"><input type="text" id="jvmArgs" class="mono" spellcheck="false" /></div>
         </div>
-        <div class="field" id="field-analytics">
-          <div class="label"><b>Anonymous stats</b><span>Opt-in. No account, IP or hardware info, just launch counts and popular mods.</span></div>
-          <div class="control"><label class="switch"><input type="checkbox" id="analytics" /><span></span></label></div>
-        </div>
         <div class="field">
           <div class="label"><b>Discord App ID</b><span>For Discord Rich Presence. Create a free app at discord.com/developers, paste its Application ID, then enable "Discord Presence" in Mods.</span></div>
           <div class="control path">
@@ -180,47 +176,6 @@
       <pre class="log mono" id="log"></pre>
     </section>
   </main>
-
-  <div class="gate" id="gate" hidden>
-    <div class="gate-aura"></div>
-    <div class="gate-petals" id="gate-petals"></div>
-    <div class="gate-card" id="gate-card">
-      <div class="gate-mark">✿</div>
-      <h1 class="gate-title"><em>Flower</em></h1>
-      <p class="gate-sub" id="gate-sub">Enter your license key to unlock the client.</p>
-      <form class="gate-form" id="gate-form" autocomplete="off">
-        <div class="gate-input" id="gate-input-wrap">
-          <input id="gate-key" type="text" spellcheck="false" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" aria-label="License key" />
-          <div class="gate-ring"></div>
-        </div>
-        <button class="gate-btn" id="gate-btn" type="submit">
-          <span class="gate-btn-label">Unlock</span>
-          <span class="gate-spinner" aria-hidden="true"></span>
-          <span class="gate-check" aria-hidden="true"></span>
-        </button>
-      </form>
-      <p class="gate-msg" id="gate-msg"></p>
-      <a class="gate-link" id="gate-getkey" href="#">Need a key?</a>
-    </div>
-    <div class="gate-foot mono" id="gate-foot">Flower Client</div>
-  </div>
-
-  <div class="modal-scrim" id="consent" hidden>
-    <div class="modal">
-      <div class="modal-glyph">✿</div>
-      <h3>Help improve Flower?</h3>
-      <p>Flower can send <b>anonymous</b> usage stats: how often it's launched, your OS, the Minecraft version and which performance mods are popular.</p>
-      <ul class="modal-list">
-        <li>No account name, IP address or hardware info</li>
-        <li>Never your worlds, mods list or anything you type</li>
-        <li>Change your mind anytime in Settings</li>
-      </ul>
-      <div class="modal-actions">
-        <button class="ghost" id="consent-no">No thanks</button>
-        <button class="primary-btn" id="consent-yes">Sure, send anonymous stats</button>
-      </div>
-    </div>
-  </div>
 
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 

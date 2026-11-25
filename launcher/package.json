@@ -38,8 +38,7 @@
       "src/**/*",
       "renderer/**/*",
       "node_modules/**/*",
-      "package.json",
-      "stats-endpoint.json"
+      "package.json"
     ],
     "extraResources": [
       {

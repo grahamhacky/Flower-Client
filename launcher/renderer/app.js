@@ -335,11 +335,6 @@ function renderSettings() {
 }
 
 async function renderIntegrations() {
-  try {
-    const a = await api.analytics.get();
-    $('#analytics').checked = !!a.analytics;
-    $('#field-analytics').style.display = a.available ? '' : 'none';
-  } catch { /* ignore */ }
   try { $('#discordAppId').value = await api.discord.getAppId(); } catch { /* ignore */ }
 }
 
@@ -382,7 +377,6 @@ $('#browse-java').addEventListener('click', async () => {
   if (p) { await save({ javaPath: p }); renderSettings(); }
 });
 $('#clear-java').addEventListener('click', async () => { await save({ javaPath: '' }); renderSettings(); });
-$('#analytics').addEventListener('change', async (e) => { await api.analytics.set(e.target.checked); });
 $('#discordAppId').addEventListener('change', async (e) => {
   try { e.target.value = await api.discord.setAppId(e.target.value); toast('Saved. Enable "Discord Presence" in Mods, and make sure Discord is open.'); }
   catch (err) { toast(err.message, 'error'); }
@@ -441,94 +435,5 @@ setTimeout(reveal, 8500); // safety net
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key === 'Enter') reveal(); });
 
 
-/* ---------------- license gate ---------------- */
-(function gate() {
-  const el = {
-    gate: $('#gate'), card: $('#gate-card'), form: $('#gate-form'), input: $('#gate-key'),
-    btn: $('#gate-btn'), msg: $('#gate-msg'), sub: $('#gate-sub'), petals: $('#gate-petals'),
-    getkey: $('#gate-getkey'), foot: $('#gate-foot'),
-  };
-  // floating petals
-  for (let i = 0; i < 14; i++) {
-    const p = document.createElement('i');
-    p.textContent = Math.random() < 0.5 ? '✿' : '·';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.fontSize = (9 + Math.random() * 10) + 'px';
-    p.style.animationDuration = (7 + Math.random() * 7) + 's';
-    p.style.animationDelay = (-Math.random() * 10) + 's';
-    el.petals.appendChild(p);
-  }
-  // light key formatting as you type (groups of 4)
-  el.input.addEventListener('input', () => {
-    el.card.classList.remove('err');
-    el.msg.textContent = ''; el.msg.className = 'gate-msg';
-    const raw = el.input.value.replace(/[^A-Za-z0-9]/g, '');
-    if (/^[A-Za-z0-9]+$/.test(raw) && raw.length <= 19 && !el.input.value.includes(' ')) {
-      const grouped = raw.replace(/(.{4})/g, '$1-').replace(/-$/, '');
-      if (grouped !== el.input.value) { const pos = el.input.selectionStart; el.input.value = grouped; el.input.setSelectionRange(pos + (grouped.length - raw.length > 0 ? 1 : 0), pos + 1); }
-    }
-  });
-  el.getkey.addEventListener('click', (e) => { e.preventDefault(); el.sub.textContent = 'Ask wherever you got Flower for a license key.'; });
-
-  function fail(message) {
-    el.btn.classList.remove('loading');
-    el.card.classList.remove('ok'); el.card.classList.add('shake', 'err');
-    el.msg.textContent = message; el.msg.className = 'gate-msg error';
-    setTimeout(() => el.card.classList.remove('shake'), 500);
-    el.input.focus(); el.input.select();
-  }
-
-  function unlock() {
-    el.btn.classList.remove('loading'); el.btn.classList.add('done');
-    el.card.classList.add('ok');
-    el.msg.textContent = 'Unlocked. Welcome to Flower.'; el.msg.className = 'gate-msg good';
-    try { bloom.bloomDur = 2600; bloom.bloom(); } catch { /* ignore */ }
-    setTimeout(() => {
-      el.gate.classList.add('unlocking');
-      document.body.classList.remove('locked');
-      setTimeout(() => { el.gate.hidden = true; }, 1100);
-    }, 650);
-  }
-
-  el.form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (el.btn.classList.contains('loading') || el.btn.classList.contains('done')) return;
-    const key = el.input.value.trim();
-    if (!key) return fail('Enter a license key.');
-    el.card.classList.remove('err'); el.msg.textContent = ''; el.msg.className = 'gate-msg';
-    el.btn.classList.add('loading');
-    try {
-      const r = await api.keyauth.redeem(key);
-      if (r.ok) unlock(); else fail(r.message || 'That key was rejected.');
-    } catch (err) { fail(err.message || 'Could not reach the license server.'); }
-  });
-
-  // show the gate (or skip it if already licensed) on boot
-  window.__gateCheck = async () => {
-    try {
-      const st = await api.keyauth.status();
-      if (st.valid) { document.body.classList.remove('locked'); el.gate.hidden = true; return true; }
-    } catch { /* fall through to showing the gate */ }
-    el.gate.hidden = false;
-    document.body.classList.add('locked');
-    setTimeout(() => el.input.focus(), 400);
-    return false;
-  };
-})();
-
-async function maybeAskConsent() {
-  try {
-    const a = await api.analytics.get();
-    if (a.asked || !a.available) return;
-    const scrim = $('#consent');
-    scrim.hidden = false;
-    const choose = async (on) => { scrim.hidden = true; try { await api.analytics.set(on); } catch { /* ignore */ } renderIntegrations(); };
-    $('#consent-yes').addEventListener('click', () => choose(true), { once: true });
-    $('#consent-no').addEventListener('click', () => choose(false), { once: true });
-  } catch { /* ignore */ }
-}
-
-window.__gateCheck().then((already) => {
-  boot().then(() => { if (!document.body.classList.contains('locked')) maybeAskConsent(); });
-});
+boot();
 $('#settings').addEventListener('submit', (e) => e.preventDefault());
