@@ -4,33 +4,33 @@
 
 ## Discord release message (copy–paste)
 
-> # ✿ Flower Client v1.0.0 is here
+> # Flower Client v1.0.0 is here
 >
 > A light, clean PvP client for **Minecraft 1.21.1 (Fabric)** — HUD mods you can drag anywhere, smooth zoom, and the performance mods that matter, kept up to date for you. No hacks, safe on servers that allow PvP clients.
 >
-> **✨ Launcher**
+> **Launcher**
 > • One-click **Microsoft sign-in**, auto-downloads **Java 21** and installs **Fabric** for you
 > • Built-in **Modrinth browser** — search & install mods, dependencies handled
 > • **Performance mods** (Sodium, Lithium, FerriteCore, Entity Culling) kept up to date
-> • Living **ASCII flower** intro that changes with the seasons 🌸🌻🎃❄️
+> • Living **ASCII flower** intro that changes with the seasons
 > • **Auto-update** — new versions install themselves
 >
-> **🎮 In-game** (press **Right Shift**)
+> **In-game** (press **Right Shift**)
 > • HUD: FPS, CPS, Keystrokes, Coordinates, Armor, Potion effects, Ping, Direction, Clock, Speed
 > • **Biome Tint** — your HUD recolors to match the biome you're in
 > • **Zoom** (hold C), **Toggle Sprint**, drag-and-drop **HUD editor**
 > • **Client-side day/night** switch in the pause menu
-> • **Flower loading screens** + a themed title screen, now in a clean ASCII/mono style
+> • **Flower loading screens** + a themed title screen, in a clean ASCII/mono style
 >
-> **🧥 Cosmetics**
+> **Cosmetics**
 > • **Flower capes** — redeem a code to unlock. Launch code: `RELEASE2027`
 > • Set your **own menu background**
 > • **Discord Rich Presence** — show you're on Flower
 >
-> 📥 **Download:** <link to your GitHub release>
-> ⚠️ Windows SmartScreen will warn (unsigned) — **More info → Run anyway**.
+> **Download:** <link to your GitHub release>
+> Windows SmartScreen will warn (unsigned) — **More info → Run anyway**.
 >
-> Found a bug or want a feature? Drop it in the channel. 💐
+> Found a bug or want a feature? Drop it in the channel.
 
 ---
 
