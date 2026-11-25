@@ -10,7 +10,7 @@ import net.minecraft.client.gui.screen.MessageScreen;
 import net.minecraft.client.gui.screen.ProgressScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
-import net.minecraft.client.gui.WorldGenerationProgressTracker;
+import net.minecraft.server.WorldGenerationProgressTracker;
 import net.minecraft.util.Util;
 import java.lang.reflect.Field;
 import java.util.Map;
