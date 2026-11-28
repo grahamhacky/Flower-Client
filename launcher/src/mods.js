@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const { getJson, download, sha1File } = require('./net');
+const versions = require('./versions');
 
 /** Optional performance mods (Modrinth slugs) the user can toggle in the launcher. */
 const PERFORMANCE = {
@@ -39,10 +40,18 @@ function bundledModDirs() {
   ];
 }
 
-function findBundledFlowerJar() {
+/**
+ * Finds the bundled Flower jar. When a version is given, a build tagged for that
+ * version (e.g. flowerclient-1.21.1-*.jar) wins over an untagged one, so a build
+ * that ships per-version jars just works.
+ */
+function findBundledFlowerJar(mcVersion) {
+  const match = (files, re) => files.find((f) => re.test(f) && !f.includes('-sources'));
   for (const dir of bundledModDirs()) {
     try {
-      const jar = fs.readdirSync(dir).find((f) => /^flowerclient-.*\.jar$/.test(f) && !f.includes('-sources'));
+      const files = fs.readdirSync(dir);
+      const jar = (mcVersion && match(files, new RegExp(`^flowerclient-${mcVersion.replace(/\./g, '\\.')}[-+].*\\.jar$`)))
+        || match(files, /^flowerclient-.*\.jar$/);
       if (jar) return path.join(dir, jar);
     } catch { /* not there */ }
   }
@@ -99,14 +108,21 @@ async function syncMods(gameDir, mcVersion, perf, progress) {
     }
   }
 
-  const jar = findBundledFlowerJar();
+  const jar = versions.isFlowerNative(mcVersion) ? findBundledFlowerJar(mcVersion) : null;
   if (jar) {
     const name = path.basename(jar);
     if (managed.flowerclient && managed.flowerclient !== name) await fs.promises.rm(path.join(modsDir, managed.flowerclient), { force: true });
     await fs.promises.copyFile(jar, path.join(modsDir, name));
     managed.flowerclient = name;
-  } else if (!managed.flowerclient) {
-    warnings.push('Flower Client mod jar is not bundled with this launcher build — the game will start without HUD mods.');
+  } else {
+    // Remove a Flower jar left over from a previous (native) version so it can't
+    // break the launch on a version it wasn't built for.
+    if (managed.flowerclient) {
+      await fs.promises.rm(path.join(modsDir, managed.flowerclient), { force: true });
+      delete managed.flowerclient;
+    }
+    if (!versions.isFlowerNative(mcVersion)) warnings.push(`Flower HUD isn't available on Minecraft ${mcVersion} yet — launching with Fabric and the performance mods. Switch to 1.21.1 for the full Flower HUD.`);
+    else warnings.push('Flower Client mod jar is not bundled with this launcher build — the game will start without HUD mods.');
   }
 
   await fs.promises.writeFile(manifestPath, JSON.stringify(managed, null, 2));

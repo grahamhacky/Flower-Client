@@ -6,8 +6,9 @@ const auth = require('./auth');
 const { ensureJava } = require('./java');
 const { ensureFabric } = require('./fabric');
 const { syncMods } = require('./mods');
+const versions = require('./versions');
 
-const MC_VERSION = '1.21.1';
+const MC_VERSION = versions.DEFAULT;
 let running = null;
 
 /** Weighted stages so the progress bar moves smoothly across the whole launch. */
@@ -16,6 +17,7 @@ const STAGES = { auth: [0, 0.04], java: [0.04, 0.2], fabric: [0.2, 0.24], mods: 
 async function launch(emit) {
   if (running) throw new Error('Minecraft is already running.');
   const s = store.load();
+  const mcVersion = versions.resolve(s.mcVersion);
   const progress = (stage, p, text) => {
     const [a, b] = STAGES[stage];
     emit('progress', { pct: a + (b - a) * Math.max(0, Math.min(1, p)), text });
@@ -27,8 +29,8 @@ async function launch(emit) {
 
   await fs.promises.mkdir(s.gameDir, { recursive: true });
   const javaPath = await ensureJava(s.javaPath, progress);
-  const custom = await ensureFabric(s.gameDir, MC_VERSION, progress);
-  const warnings = await syncMods(s.gameDir, MC_VERSION, s.performanceMods, progress);
+  const custom = await ensureFabric(s.gameDir, mcVersion, progress);
+  const warnings = await syncMods(s.gameDir, mcVersion, s.performanceMods, progress);
   warnings.forEach((w) => emit('log', '[warn] ' + w));
 
   const launcher = new Client();
@@ -56,11 +58,11 @@ async function launch(emit) {
     if (code && code !== 0 && !started) emit('error', `Minecraft exited with code ${code}. Check the log for details.`);
   });
 
-  progress('game', 0, 'Preparing Minecraft ' + MC_VERSION);
+  progress('game', 0, 'Preparing Minecraft ' + mcVersion);
   const proc = await launcher.launch({
     authorization,
     root: s.gameDir,
-    version: { number: MC_VERSION, type: 'release', custom },
+    version: { number: mcVersion, type: 'release', custom },
     memory: { max: `${s.ramMb}M`, min: `${Math.min(1024, s.ramMb)}M` },
     javaPath,
     customArgs: String(s.jvmArgs || '').split(/\s+/).filter(Boolean),

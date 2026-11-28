@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { app, safeStorage } = require('electron');
+const versions = require('./versions');
 
 function defaultGameDir() {
   if (process.platform === 'win32') return path.join(process.env.APPDATA || os.homedir(), '.flowerclient');
@@ -11,6 +12,7 @@ function defaultGameDir() {
 }
 
 const DEFAULTS = {
+  mcVersion: versions.DEFAULT,
   ramMb: Math.min(4096, Math.max(2048, Math.floor(os.totalmem() / 1024 / 1024 / 4 / 512) * 512)),
   javaPath: '',
   gameDir: defaultGameDir(),
@@ -36,12 +38,14 @@ function load() {
   } catch {
     cache = { ...DEFAULTS };
   }
+  cache.mcVersion = versions.resolve(cache.mcVersion);
   return cache;
 }
 
 function save(patch) {
   const next = { ...load(), ...patch };
   if (patch.performanceMods) next.performanceMods = { ...load().performanceMods, ...patch.performanceMods };
+  next.mcVersion = versions.resolve(next.mcVersion);
   next.ramMb = Math.max(1024, Math.min(32768, Number(next.ramMb) || DEFAULTS.ramMb));
   next.width = Math.max(640, Number(next.width) || 1280);
   next.height = Math.max(480, Number(next.height) || 720);

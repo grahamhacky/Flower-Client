@@ -6,6 +6,7 @@ const auth = require('./src/auth');
 const game = require('./src/game');
 const mods = require('./src/mods');
 const modrinth = require('./src/modrinth');
+const versions = require('./src/versions');
 let autoUpdater = null;
 try { autoUpdater = require('electron-updater').autoUpdater; } catch { /* dev without the dep */ }
 
@@ -77,9 +78,9 @@ handle('account:logout', () => auth.logout());
 handle('modules:get', () => mods.readModules(store.load().gameDir));
 handle('modules:set', (name, enabled) => mods.setModule(store.load().gameDir, name, enabled));
 handle('mods:performance', () => mods.PERFORMANCE);
-handle('modrinth:search', (opts) => modrinth.search(store.load().gameDir, game.MC_VERSION, opts || {}));
+handle('modrinth:search', (opts) => modrinth.search(store.load().gameDir, store.load().mcVersion, opts || {}));
 handle('modrinth:installed', () => modrinth.installed(store.load().gameDir));
-handle('modrinth:install', (id) => modrinth.install(store.load().gameDir, game.MC_VERSION, id, (p) => send('modrinth:progress', p)));
+handle('modrinth:install', (id) => modrinth.install(store.load().gameDir, store.load().mcVersion, id, (p) => send('modrinth:progress', p)));
 handle('modrinth:uninstall', (id) => modrinth.uninstall(store.load().gameDir, id));
 handle('cape:status', () => mods.capeStatus(store.load().gameDir));
 handle('cape:redeem', (code) => mods.redeemCape(store.load().gameDir, code));
@@ -94,7 +95,8 @@ handle('bg:choose', async () => {
 handle('bg:clear', () => mods.clearBackground(store.load().gameDir));
 handle('discord:getAppId', () => mods.getDiscordAppId(store.load().gameDir));
 handle('discord:setAppId', (id) => mods.setDiscordAppId(store.load().gameDir, id));
-handle('app:info', () => ({ version: app.getVersion(), mc: game.MC_VERSION, flowerBundled: !!mods.findBundledFlowerJar(), platform: process.platform }));
+handle('versions:get', () => ({ list: versions.list(), selected: store.load().mcVersion }));
+handle('app:info', () => ({ version: app.getVersion(), mc: store.load().mcVersion, flowerBundled: !!mods.findBundledFlowerJar(store.load().mcVersion), flowerNative: versions.isFlowerNative(store.load().mcVersion), platform: process.platform }));
 
 handle('game:launch', () => game.launch((type, payload) => {
   if (type === 'state' && payload === 'running' && store.load().closeOnLaunch) setTimeout(() => app.quit(), 1500);

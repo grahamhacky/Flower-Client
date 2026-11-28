@@ -435,6 +435,66 @@ function renderFacts() {
 }
 
 
+/* ---------------- version selector ---------------- */
+function applyVersionUI(id) {
+  const v = (state.versions || []).find((x) => x.id === id) || {};
+  $('#ver-value').textContent = id;
+  $('#mc-version').textContent = id;
+  $('#mr-version').textContent = id;
+  if (state.info) state.info.mc = id;
+  renderPlay();
+  const note = $('#ver-note');
+  if (v.flower) { note.hidden = true; note.textContent = ''; }
+  else { note.hidden = false; note.textContent = `Fabric + performance mods run on ${id}. The Flower HUD is on 1.21.x for now.`; }
+}
+
+function buildVerMenu() {
+  const cur = state.settings.mcVersion;
+  $('#ver-menu').innerHTML = (state.versions || []).map((v) => {
+    const tag = v.recommended ? '<span class="ver-tag">Recommended</span>' : v.flower ? '<span class="ver-tag">Flower HUD</span>' : '<span class="ver-tag dim">Perf only</span>';
+    return `<li role="option" data-id="${esc(v.id)}" aria-selected="${v.id === cur}" class="${v.id === cur ? 'on' : ''}"><span class="mono">${esc(v.id)}</span>${tag}</li>`;
+  }).join('');
+}
+
+function closeVerMenu() {
+  $('#ver-menu').hidden = true;
+  $('#ver-btn').setAttribute('aria-expanded', 'false');
+}
+
+async function selectVersion(id) {
+  if (!id || id === state.settings.mcVersion) { closeVerMenu(); return; }
+  try {
+    state.settings = await api.settings.set({ mcVersion: id });
+  } catch (e) { toast(e.message, 'error'); closeVerMenu(); return; }
+  buildVerMenu();
+  applyVersionUI(state.settings.mcVersion);
+  renderFacts();
+  closeVerMenu();
+  mr.loaded = false; mr.hits = []; mr.offset = 0;
+  if (state.page === 'browse') mrLoad(true);
+  toast(`Minecraft ${state.settings.mcVersion} selected. Press Play to install and launch.`);
+}
+
+function renderVersionSelect() {
+  if (!state.versions || !state.settings) return;
+  buildVerMenu();
+  applyVersionUI(state.settings.mcVersion);
+  const btn = $('#ver-btn'), menu = $('#ver-menu');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) { const on = menu.querySelector('.on'); if (on) on.scrollIntoView({ block: 'nearest' }); }
+  });
+  menu.addEventListener('click', (e) => {
+    const li = e.target.closest('li[data-id]');
+    if (li) selectVersion(li.dataset.id);
+  });
+  document.addEventListener('click', (e) => { if (!$('#verselect').contains(e.target)) closeVerMenu(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVerMenu(); });
+}
+
 /* ---------------- auto-update ---------------- */
 (function updater() {
   const banner = $('#update-banner'), text = $('#update-text'), btn = $('#update-action');
@@ -454,15 +514,16 @@ function renderFacts() {
 /* ---------------- boot ---------------- */
 async function boot() {
   try {
-    const [info, settings, account, modules, perf] = await Promise.all([
-      api.app.info(), api.settings.get(), api.account.get(), api.modules.get(), api.modules.performance(),
+    const [info, settings, account, modules, perf, vers] = await Promise.all([
+      api.app.info(), api.settings.get(), api.account.get(), api.modules.get(), api.modules.performance(), api.versions.get(),
     ]);
-    Object.assign(state, { info, settings, account, modules, perf });
+    Object.assign(state, { info, settings, account, modules, perf, versions: vers.list });
     bloom.setTheme(settings.bloomTheme || 'auto');
     $('#build-tag').textContent = 'v' + info.version;
     $('#mc-version').textContent = info.mc;
     $('#mr-version').textContent = info.mc;
     renderAccount();
+    renderVersionSelect();
     renderMods();
     renderSettings();
     renderFacts();

@@ -56,10 +56,21 @@
         <p class="lede">A light, quiet client for Minecraft. Drag your HUD anywhere, zoom smoothly, and keep the performance mods that matter up to date without thinking about it.</p>
 
         <div class="play-wrap">
-          <button class="play" id="play">
-            <span class="play-label">Play</span>
-            <span class="play-sub mono" id="play-sub">1.21.1 · Fabric</span>
-          </button>
+          <div class="launch-row">
+            <div class="verselect" id="verselect">
+              <button type="button" class="ver-btn" id="ver-btn" aria-haspopup="listbox" aria-expanded="false">
+                <span class="ver-cap mono">Version</span>
+                <span class="ver-value mono" id="ver-value">1.21.1</span>
+                <svg class="ver-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <ul class="ver-menu" id="ver-menu" role="listbox" tabindex="-1" hidden></ul>
+            </div>
+            <button class="play" id="play">
+              <span class="play-label">Play</span>
+              <span class="play-sub mono" id="play-sub">1.21.1 · Fabric</span>
+            </button>
+          </div>
+          <p class="ver-note mono" id="ver-note" hidden></p>
           <div class="status">
             <div class="bar"><i id="bar"></i></div>
             <p class="mono" id="status-text">Ready</p>
